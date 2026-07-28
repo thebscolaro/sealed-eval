@@ -32,9 +32,14 @@ git commit -qm "Bootstrap sealed-eval control plane for $(basename "$SUBJECT")."
 ./scripts/bootstrap.sh
 
 if command -v gh >/dev/null 2>&1; then
-  gh repo create "thebscolaro/$NAME" --private --source=. --remote=origin --push \
-    --description "SEALed-eval control plane for $(basename "$SUBJECT")" \
-    || echo "bootstrap-sibling: gh repo create failed (create manually)"
+  OWNER="$(gh api user -q .login 2>/dev/null || true)"
+  if [[ -n "$OWNER" ]]; then
+    gh repo create "$OWNER/$NAME" --private --source=. --remote=origin --push \
+      --description "SEALed-eval control plane for $(basename "$SUBJECT")" \
+      || echo "bootstrap-sibling: gh repo create failed (create manually: gh repo create $OWNER/$NAME --private --source=. --push)"
+  else
+    echo "bootstrap-sibling: gh not logged in; create repo manually when ready"
+  fi
 fi
 
 POINTER="$SUBJECT/SEALED_EVAL.md"
@@ -44,7 +49,6 @@ cat > "$POINTER" <<EOF
 This subject is graded by a **sibling** control plane (not this repo).
 
 - Control plane path: \`$DEST\`
-- GitHub: \`thebscolaro/$NAME\` (if created)
 - Coders: read public task + scorecard only — never seal tokens
 
 Operator loop: see control plane \`docs/RUNBOOK.md\`.
