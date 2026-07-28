@@ -5,7 +5,7 @@ import json
 import secrets
 from pathlib import Path
 
-from sealed_eval.models import Case, SuiteStatus, TaskCard
+from sealed_eval.models import Case, Scorecard, SuiteStatus, TaskCard
 
 
 class SealedStore:
@@ -72,6 +72,26 @@ class SealedStore:
     def public_task(self, suite_id: str) -> dict:
         card = self.load_task(suite_id)
         return card.model_dump()
+
+    def load_draft_cases(self, suite_id: str) -> list[Case]:
+        path = self._suite_dir(suite_id) / "cases.draft.json"
+        if not path.exists():
+            raise FileNotFoundError(f"no draft for {suite_id}")
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return [Case.model_validate(x) for x in data]
+
+    def save_scorecard(self, suite_id: str, score: Scorecard) -> None:
+        d = self._suite_dir(suite_id)
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "scorecard.json").write_text(score.model_dump_json(indent=2), encoding="utf-8")
+        # coder-safe copy: aggregates only (same shape today; no payloads)
+        (d / "scorecard.public.json").write_text(score.model_dump_json(indent=2), encoding="utf-8")
+
+    def load_public_scorecard(self, suite_id: str) -> dict:
+        path = self._suite_dir(suite_id) / "scorecard.public.json"
+        if not path.exists():
+            raise FileNotFoundError(f"no scorecard for {suite_id}")
+        return json.loads(path.read_text(encoding="utf-8"))
 
     @staticmethod
     def new_token() -> str:

@@ -6,11 +6,11 @@ from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from sealed_eval.capabilities import import_cases_json, probe
-from sealed_eval.grader import grade_artifact
+from sealed_eval.grader import apply_gate, grade_artifact
 from sealed_eval.propose import load_fixture, propose_from_markdown
 from sealed_eval.store import SealedStore
 
-app = FastAPI(title="SEALed-eval", version="0.1.0")
+app = FastAPI(title="SEALed-eval", version="0.2.0")
 
 
 def _store() -> SealedStore:
@@ -41,6 +41,7 @@ class GradeBody(BaseModel):
     artifact_base_url: str | None = None
     token: str
     pass_threshold: float = Field(default=1.0, ge=0.0, le=1.0)
+    max_gap: float = Field(default=0.25, ge=0.0, le=1.0)
 
 
 class GateBody(BaseModel):
@@ -79,6 +80,16 @@ def propose_eval(body: ProposeBody):
         raise HTTPException(404, str(e)) from e
     store.write_draft(card, cases)
     return {"status": "draft", "suite_id": card.id, "cases": len(cases)}
+
+
+@app.get("/v1/draft/{suite_id}")
+def draft(suite_id: str):
+    store = _store()
+    try:
+        cases = store.load_draft_cases(suite_id)
+    except FileNotFoundError as e:
+        raise HTTPException(404, str(e)) from e
+    return {"suite_id": suite_id, "cases": [c.model_dump(mode="json") for c in cases]}
 
 
 @app.post("/v1/seal_corpus")
@@ -125,31 +136,41 @@ def grade(body: GradeBody, x_seal_token: str | None = Header(default=None)):
     if not url:
         raise HTTPException(400, "artifact_base_url required (or submit_artifact first)")
     try:
-        score = grade_artifact(store, body.suite_id, url, token)
+        score = grade_artifact(
+            store,
+            body.suite_id,
+            url,
+            token,
+            pass_threshold=body.pass_threshold,
+            max_gap=body.max_gap,
+        )
     except PermissionError as e:
         raise HTTPException(403, str(e)) from e
     except FileNotFoundError as e:
         raise HTTPException(404, str(e)) from e
-    rate = (score.ok / score.total) if score.total else 0.0
-    if rate >= body.pass_threshold and score.visible_heldout_gap <= 0.25:
-        score.gate = "pass"
-        score.passed = True
-    elif rate >= body.pass_threshold * 0.8:
-        score.gate = "retry"
-        score.passed = False
-    else:
-        score.gate = "fail"
-        score.passed = False
     return score.model_dump()
+
+
+@app.get("/v1/scorecard/{suite_id}")
+def scorecard(suite_id: str):
+    """Coder-safe aggregates; no seal token."""
+    try:
+        return _store().load_public_scorecard(suite_id)
+    except FileNotFoundError as e:
+        raise HTTPException(404, str(e)) from e
 
 
 @app.post("/v1/gate")
 def gate(body: GateBody):
+    from sealed_eval.models import Scorecard
+
+    score = Scorecard(
+        suite_id=body.suite_id,
+        passed=False,
+        total=body.total,
+        ok=body.ok,
+        visible_heldout_gap=body.visible_heldout_gap,
+    )
+    score = apply_gate(score, pass_threshold=body.pass_threshold, max_gap=body.max_gap)
     rate = (body.ok / body.total) if body.total else 0.0
-    if rate >= body.pass_threshold and body.visible_heldout_gap <= body.max_gap:
-        decision = "pass"
-    elif rate >= body.pass_threshold * 0.8:
-        decision = "retry"
-    else:
-        decision = "fail"
-    return {"suite_id": body.suite_id, "gate": decision, "rate": rate}
+    return {"suite_id": body.suite_id, "gate": score.gate, "rate": rate}

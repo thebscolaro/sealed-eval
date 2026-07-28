@@ -48,6 +48,14 @@ def propose_cmd(
     typer.echo(f"draft {card.id} cases={len(cases)}")
 
 
+@app.command("show-draft")
+def show_draft(suite_id: str, store_path: Path | None = None):
+    import json
+
+    cases = _store(store_path).load_draft_cases(suite_id)
+    typer.echo(json.dumps([c.model_dump(mode="json") for c in cases], indent=2))
+
+
 @app.command()
 def seal(suite_id: str, token: str, store_path: Path | None = None):
     s = _store(store_path).seal_corpus(suite_id, token)
@@ -71,12 +79,33 @@ def grade(
     artifact_url: str,
     token: str,
     store_path: Path | None = None,
+    pass_threshold: float = 1.0,
+    max_gap: float = 0.25,
 ):
     import json
 
-    score = grade_artifact(_store(store_path), suite_id, artifact_url, token)
+    score = grade_artifact(
+        _store(store_path),
+        suite_id,
+        artifact_url,
+        token,
+        pass_threshold=pass_threshold,
+        max_gap=max_gap,
+    )
     typer.echo(json.dumps(score.model_dump(), indent=2))
     raise SystemExit(0 if score.passed else 1)
+
+
+@app.command()
+def scorecard(suite_id: str, store_path: Path | None = None, out: Path | None = None):
+    """Coder-safe aggregate scorecard (no seal token)."""
+    import json
+
+    data = _store(store_path).load_public_scorecard(suite_id)
+    text = json.dumps(data, indent=2)
+    if out:
+        out.write_text(text, encoding="utf-8")
+    typer.echo(text)
 
 
 @app.command()

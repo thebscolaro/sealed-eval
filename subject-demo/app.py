@@ -1,6 +1,7 @@
 """Tiny subject app for sealed-eval demo."""
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 app = FastAPI(title="subject-demo-orders")
@@ -11,6 +12,12 @@ _SEQ = 0
 class OrderIn(BaseModel):
     sku: str
     qty: int
+
+
+@app.get("/", response_class=HTMLResponse)
+def home():
+    return """<!doctype html><html><head><title>Orders</title></head>
+<body><h1>Orders</h1><p id="status">demo ready</p></body></html>"""
 
 
 @app.get("/health")

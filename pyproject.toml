@@ -1,6 +1,6 @@
 [project]
 name = "sealed-eval"
-version = "0.1.0"
+version = "0.2.0"
 description = "Sealed evaluation control plane for coding agents — grade running artifacts outside the coder's reach"
 readme = "README.md"
 license = "MIT"
@@ -34,12 +34,15 @@ dev = [
   "pytest>=8.3.0",
   "ruff>=0.8.0",
 ]
+ui = [
+  "playwright>=1.49.0",
+]
 
 [project.urls]
-Homepage = "https://github.com/example/sealed-eval"
-Documentation = "https://github.com/example/sealed-eval/blob/main/docs/RUNBOOK.md"
-Issues = "https://github.com/example/sealed-eval/issues"
-Changelog = "https://github.com/example/sealed-eval/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/thebscolaro/sealed-eval"
+Documentation = "https://github.com/thebscolaro/sealed-eval/blob/main/docs/RUNBOOK.md"
+Issues = "https://github.com/thebscolaro/sealed-eval/issues"
+Changelog = "https://github.com/thebscolaro/sealed-eval/blob/main/CHANGELOG.md"
 
 [project.scripts]
 sealed-eval = "sealed_eval.cli:app"

@@ -11,6 +11,10 @@ class CheckMode(str, Enum):
     differential = "differential"
     contract = "contract"
     invariant = "invariant"
+    ui = "ui"
+    json_probe = "json_probe"
+    db = "db"
+    cli = "cli"
 
 
 class TaskCard(BaseModel):

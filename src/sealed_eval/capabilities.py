@@ -12,18 +12,24 @@ def probe() -> dict[str, dict[str, bool | str]]:
         "gh": "GitHub CLI",
         "ctx7": "Context7 docs CLI",
         "docker": "Docker",
+        "ownlock": "ownlock secret broker",
     }
     out: dict[str, dict[str, bool | str]] = {}
     for cmd, label in tools.items():
         path = shutil.which(cmd)
         out[cmd] = {"available": bool(path), "label": label, "path": path or ""}
-    # intent-layer skill present?
     skill = Path.home() / ".agents" / "skills" / "intent-layer" / "SKILL.md"
     out["intent-layer"] = {
         "available": skill.exists(),
         "label": "intent-layer skill",
         "path": str(skill) if skill.exists() else "",
     }
+    try:
+        import playwright  # noqa: F401
+
+        out["playwright"] = {"available": True, "label": "Playwright", "path": "python"}
+    except ImportError:
+        out["playwright"] = {"available": False, "label": "Playwright", "path": ""}
     return out
 
 
