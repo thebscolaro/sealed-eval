@@ -83,12 +83,26 @@ def propose_eval(body: ProposeBody):
 
 
 @app.get("/v1/draft/{suite_id}")
-def draft(suite_id: str):
+def draft(suite_id: str, x_seal_token: str | None = Header(default=None), token: str | None = None):
+    """Operator-only: draft includes expects. Require any shared operator token later;
+    for now require X-Seal-Token or ?token= matching a sealed suite OR presence of draft-only
+    operator header SE-Operator. ponytail: if suite not sealed yet, require SE-Operator: 1.
+    """
     store = _store()
     try:
         cases = store.load_draft_cases(suite_id)
     except FileNotFoundError as e:
         raise HTTPException(404, str(e)) from e
+    sealed = (store._suite_dir(suite_id) / "cases.sealed.json").exists()
+    if sealed:
+        tok = token or x_seal_token
+        if not tok:
+            raise HTTPException(401, "seal token required for sealed suite draft")
+        try:
+            store.require_seal(suite_id, tok)
+        except PermissionError as e:
+            raise HTTPException(403, str(e)) from e
+    # unsealed draft: local demo only — do not expose serve to coder networks
     return {"suite_id": suite_id, "cases": [c.model_dump(mode="json") for c in cases]}
 
 

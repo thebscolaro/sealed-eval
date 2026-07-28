@@ -43,7 +43,7 @@ Optional cross-repo secrets: `./scripts/ownlock-team-bundle.sh /path/to/subject 
 | `dogfood-install-path.sh` | full cold path + scorecard |
 | `dogfood-multimode.sh` | contract + invariant + golden |
 | `dogfood-probe-db.sh` | json_probe + sqlite db |
-| `dogfood-ownauth.sh` | OwnAuth Express API (optional) |
+| `dogfood-ownauth.sh` | OwnAuth Express API only (not Tauri desktop IPC) |
 
 ## Threat model
 
