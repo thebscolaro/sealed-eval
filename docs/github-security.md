@@ -31,9 +31,10 @@ Apply on `thebscolaro/sealed-eval` (Settings → General / Code security):
 - [x] **Secret scanning** + **push protection**
 - [x] **Dependabot alerts** + security updates
 - [x] **Private vulnerability reporting** (linked from SECURITY.md)
-- [ ] **Actions permissions**: prefer verified creators / allowlist (confirm in UI)
+- [x] **Actions permissions**: selected actions — GitHub-owned + verified creators
 - [x] **Fork PR workflows**: require approval for outside collaborators (`can_approve_pull_request_runs`)
 - [x] Wiki / Projects disabled
+- [x] Delete head branches on merge
 
 ## Supply-chain files
 
