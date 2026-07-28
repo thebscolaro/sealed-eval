@@ -120,5 +120,21 @@ def new_token():
     typer.echo(SealedStore.new_token())
 
 
+@app.command("survey-subject")
+def survey_subject_cmd(
+    subject_path: Path,
+    out: Path | None = None,
+):
+    """Scan subject for AC seeds (all sources). Draft only — never seals."""
+    from sealed_eval.survey import survey_subject
+
+    text = survey_subject(subject_path)
+    if out:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding="utf-8")
+        typer.echo(f"wrote {out}")
+    typer.echo(text)
+
+
 if __name__ == "__main__":
     app()

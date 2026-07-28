@@ -4,6 +4,18 @@
 
 Skills tell agents **when** to call SE. The harness **seals and grades**. Intent-layer (`AGENTS.md` on the subject) helps agents understand the app; SE is a **sibling** judge repo.
 
+## AC seeding (HITL)
+
+```bash
+sealed-eval survey-subject /path/to/subject --out fixtures/survey-candidates.md
+# human edits candidates + Novel acceptance + Accept (approved)
+sealed-eval propose <suite> --markdown-file fixtures/<suite>-ac.md --title "…"
+sealed-eval show-draft <suite>   # human confirms
+# then seal → publish → grade
+```
+
+Survey auto-scans AC files, AGENTS.md, README/docs, `gh` issues/PRs, and light code heuristics. It never seals. UI Accept bullets need quoted text (`shows "Get started"`).
+
 ## Cold install
 
 ```bash

@@ -1,3 +1,8 @@
+## [0.3.1] — 2026-07-28
+
+- `survey-subject` CLI (all seed sources + novel AC section); HITL operator skill
+- Propose refuses unquoted UI expects; drop unused screenshot_sha256
+
 ## [0.3.0] — 2026-07-28
 
 - Draw.io architecture + operator-loop PNGs in README
