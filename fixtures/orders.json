@@ -1,0 +1,47 @@
+{
+  "task_card": {
+    "id": "orders-v1",
+    "title": "Orders API",
+    "summary": "Create and fetch orders",
+    "public_acceptance": [
+      "POST /orders returns 201",
+      "GET /orders/{id} returns order"
+    ]
+  },
+  "cases": [
+    {
+      "id": "health",
+      "check": "contract",
+      "bucket": "health",
+      "request": { "method": "GET", "path": "/health" },
+      "expect": { "status": 200, "json_contains": { "ok": true } },
+      "visible": true
+    },
+    {
+      "id": "create-order",
+      "check": "contract",
+      "bucket": "orders",
+      "request": {
+        "method": "POST",
+        "path": "/orders",
+        "json": { "sku": "abc", "qty": 2 }
+      },
+      "expect": {
+        "status": 201,
+        "json_contains": { "sku": "abc", "qty": 2 }
+      },
+      "visible": false
+    },
+    {
+      "id": "get-order",
+      "check": "contract",
+      "bucket": "orders",
+      "request": { "method": "GET", "path": "/orders/{last_id}" },
+      "expect": {
+        "status": 200,
+        "json_contains": { "sku": "abc", "qty": 2 }
+      },
+      "visible": false
+    }
+  ]
+}

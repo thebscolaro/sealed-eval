@@ -1,0 +1,102 @@
+{
+  "task_card": {
+    "id": "ownauth-dev-api",
+    "title": "OwnAuth Express dev API",
+    "summary": "Contract checks against OwnAuth browser-dev Express API (not the Tauri desktop app).",
+    "public_acceptance": [
+      "GET /api/health returns ok",
+      "GET /api/accounts lists vault entries",
+      "Manual enrollment rejects blank issuer",
+      "Backup export rejects short passphrase",
+      "Manual enrollment creates an account and can mint a TOTP code"
+    ]
+  },
+  "cases": [
+    {
+      "id": "health",
+      "check": "contract",
+      "bucket": "health",
+      "request": {
+        "method": "GET",
+        "path": "/api/health",
+        "headers": { "Authorization": "Bearer se-ownauth-dogfood" }
+      },
+      "expect": {
+        "status": 200,
+        "json_contains": { "ok": true, "name": "ownauth" }
+      },
+      "visible": true
+    },
+    {
+      "id": "list-accounts",
+      "check": "contract",
+      "bucket": "accounts",
+      "request": {
+        "method": "GET",
+        "path": "/api/accounts",
+        "headers": { "Authorization": "Bearer se-ownauth-dogfood" }
+      },
+      "expect": { "status": 200 },
+      "visible": true
+    },
+    {
+      "id": "reject-blank-issuer",
+      "check": "contract",
+      "bucket": "accounts",
+      "request": {
+        "method": "POST",
+        "path": "/api/accounts/manual",
+        "headers": { "Authorization": "Bearer se-ownauth-dogfood" },
+        "json": {
+          "issuer": "   ",
+          "account": "user",
+          "secret": "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP"
+        }
+      },
+      "expect": { "status": 400 },
+      "visible": false
+    },
+    {
+      "id": "reject-short-passphrase",
+      "check": "contract",
+      "bucket": "backup",
+      "request": {
+        "method": "POST",
+        "path": "/api/backup/export",
+        "headers": { "Authorization": "Bearer se-ownauth-dogfood" },
+        "json": { "passphrase": "five!" }
+      },
+      "expect": { "status": 400 },
+      "visible": false
+    },
+    {
+      "id": "create-manual",
+      "check": "contract",
+      "bucket": "accounts",
+      "request": {
+        "method": "POST",
+        "path": "/api/accounts/manual",
+        "headers": { "Authorization": "Bearer se-ownauth-dogfood" },
+        "json": {
+          "issuer": "SEALed",
+          "account": "dogfood@example.com",
+          "secret": "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP"
+        }
+      },
+      "expect": { "status": 201 },
+      "visible": false
+    },
+    {
+      "id": "get-code",
+      "check": "contract",
+      "bucket": "accounts",
+      "request": {
+        "method": "GET",
+        "path": "/api/accounts/{last_id}/code",
+        "headers": { "Authorization": "Bearer se-ownauth-dogfood" }
+      },
+      "expect": { "status": 200 },
+      "visible": false
+    }
+  ]
+}

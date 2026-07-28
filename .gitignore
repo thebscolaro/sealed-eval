@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+sealed/*/
+!sealed/.gitkeep
+.env
+*.url
+.coverage
+htmlcov/
