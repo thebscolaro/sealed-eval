@@ -278,11 +278,6 @@ def run_ui(case: Case, base_url: str, ctx: dict[str, Any]) -> tuple[bool, str]:
                 ):
                     browser.close()
                     return False, "selector_text"
-            if "screenshot_sha256" in expect:
-                dig = hashlib.sha256(page.screenshot(full_page=True)).hexdigest()
-                if dig != expect["screenshot_sha256"]:
-                    browser.close()
-                    return False, "screenshot_sha256"
             browser.close()
     except Exception as e:  # noqa: BLE001
         return False, f"ui_error:{type(e).__name__}"

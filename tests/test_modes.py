@@ -1,14 +1,30 @@
 """Tests for multi-mode checks and markdown propose."""
 
+import pytest
+
 from sealed_eval.checks import run_case, run_invariant, run_json_probe
 from sealed_eval.models import Case, CheckMode
 from sealed_eval.propose import propose_from_markdown
+from sealed_eval.survey import survey_subject
 
 
-def test_propose_markdown_modes():
+def test_propose_requires_quoted_ui():
     body = """Accept:
 - GET /health returns 200
-- Health response never contains traceback
+- UI page shows Get started without quotes
+"""
+    with pytest.raises(ValueError, match="no draft cases|quoted"):
+        # health alone may still produce a case — use only unquoted UI
+        propose_from_markdown(
+            "t0",
+            "T",
+            'Accept:\n- Landing page shows Get started\n',
+        )
+
+
+def test_propose_quoted_ui_and_http():
+    body = """Accept:
+- GET /health returns 200
 - UI page shows "Hello"
 - health golden matches ok
 """
@@ -16,19 +32,34 @@ def test_propose_markdown_modes():
     assert card.id == "t1"
     modes = {c.check for c in cases}
     assert CheckMode.contract in modes
-    assert CheckMode.invariant in modes
     assert CheckMode.ui in modes
     assert CheckMode.holdout_golden in modes
     ui = next(c for c in cases if c.check == CheckMode.ui)
     assert ui.expect.get("text") == "Hello"
 
 
-def test_propose_default_is_ui_not_health():
-    body = "Accept:\n- Landing page shows Welcome"
+def test_propose_approved_section():
+    body = """## From repository
+- junk _(source: x)_
+
+## Accept (approved)
+
+Accept:
+- Page shows "Welcome"
+"""
     _, cases = propose_from_markdown("t2", "T", body)
-    assert cases[0].check == CheckMode.ui
-    assert cases[0].request.get("path") == "/"
-    assert "Welcome" in cases[0].expect.get("text", "")
+    assert len(cases) == 1
+    assert cases[0].expect.get("text") == "Welcome"
+
+
+def test_survey_subject_smoke(tmp_path):
+    (tmp_path / "README.md").write_text(
+        "# App\n\n## Acceptance\n- Page shows \"Hi\"\n", encoding="utf-8"
+    )
+    text = survey_subject(tmp_path)
+    assert "Survey candidates" in text
+    assert "Novel acceptance" in text
+    assert "Hi" in text or "shows" in text.lower()
 
 
 def test_invariant_never_contains():

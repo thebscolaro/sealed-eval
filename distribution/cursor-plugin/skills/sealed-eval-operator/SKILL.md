@@ -1,32 +1,32 @@
 ---
 name: sealed-eval-operator
 description: >
-  Eval-operator for SEALed-eval. Use when sealing evals, proposing cases from AC,
-  grading running artifacts, or publishing public task cards. Calls the sealed-eval
-  CLI/HTTP harness; never invents pass/fail without grade output.
+  Eval-operator for SEALed-eval. Use when sealing evals, surveying subjects for AC,
+  proposing cases, grading running artifacts, or publishing public task cards.
+  Calls the sealed-eval CLI/HTTP harness; never invents pass/fail without grade output.
+  Stops for human OK on AC list and show-draft before seal.
 ---
 
 # SEALed-eval operator (EVAL)
 
 You are the **eval-operator**, not the coder.
 
-## Do
+## Human-in-the-loop (required)
 
-1. `sealed-eval capabilities` (or `/v1/capabilities`)
-2. `sealed-eval propose <suite> --markdown-file …` or `--fixture …`
-3. `sealed-eval show-draft <suite>` — human reviews before seal
-4. Obtain seal token via ownlock (`ownlock run -- printenv SEAL_TOKEN`) or human
-5. `sealed-eval seal <suite> "$TOKEN"`
-6. `sealed-eval publish <suite>` → hand public task to coder
-7. Subject up → `sealed-eval grade <suite> <artifact_url> "$TOKEN"`
-8. Share **only** `sealed-eval scorecard <suite>` aggregates with coder
+1. Run `sealed-eval survey-subject <subject> --out fixtures/survey-candidates.md`  
+   (auto-scans README, AGENTS, docs, issues/PRs, heuristics — do **not** ask which folders).
+2. **Stop.** Show the candidate file to the human. They edit/OK bullets and fill **Novel acceptance** if needed, then fill **Accept (approved)**.
+3. Only after human OK: copy approved Accept block into `fixtures/<suite>-ac.md` (or use the approved section).
+4. `sealed-eval propose <suite> --markdown-file …`
+5. `sealed-eval show-draft <suite>` — **Stop** until human says seal.
+6. Seal with ownlock/`SEAL_TOKEN` → publish → grade → scorecard buckets only to coder.
 
 ## Do not
 
-- Share seal token or `cases.sealed.json` with coder sessions
-- Claim pass without printing harness scorecard JSON
-- Grade in-repo soft tests as the merge gate
-- Self-approve seal without human/break-glass token
+- Auto-seal or auto-grade after survey without human OK
+- Share seal token or sealed cases with coder sessions
+- Claim pass without harness scorecard JSON
+- Invent unquoted UI expects (propose will skip them)
 
 ## Secrets
 

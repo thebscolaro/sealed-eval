@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
 from sealed_eval.capabilities import import_cases_json
@@ -9,39 +10,83 @@ from sealed_eval.models import Case, CheckMode, TaskCard
 _FIXTURES = Path(__file__).resolve().parents[2] / "fixtures"
 _HTTP = re.compile(r"\b(GET|POST|PUT|PATCH|DELETE)\s+(/\S+)", re.I)
 _QUOTED = re.compile(r'["“]([^"”]+)["”]|\'([^\']+)\'')
+_EXPLICIT_TEXT = re.compile(r"(?i)\btext:\s*(\S.+)$")
+_EXPLICIT_SEL = re.compile(r"(?i)\bselector:\s*(\S.+)$")
 
 
-def _ui_text(bullet: str) -> str:
+def _ui_expect(bullet: str) -> dict | None:
+    """Require quoted string or text:/selector: — no CapWord/App guesses."""
+    m = _EXPLICIT_TEXT.search(bullet)
+    if m:
+        return {"text": m.group(1).strip().strip(",.")}
+    m = _EXPLICIT_SEL.search(bullet)
+    if m:
+        return {"selector": m.group(1).strip().strip(",.")}
     m = _QUOTED.search(bullet)
     if m:
-        return next(g for g in m.groups() if g)
-    for marker in ("shows ", "contain ", "contains ", "heading ", "title "):
-        low = bullet.lower()
-        idx = low.find(marker)
-        if idx >= 0:
-            rest = bullet[idx + len(marker) :].strip(" .")
+        return {"text": next(g for g in m.groups() if g)}
+    return None
+
+
+def _extract_ac(body: str) -> list[str]:
+    """Prefer ## Accept (approved); else Accept: section; else all bullets."""
+    lines = body.splitlines()
+    approved: list[str] = []
+    take = False
+    for ln in lines:
+        if ln.strip().lower().startswith("## accept (approved)"):
+            take = True
+            continue
+        if take and ln.strip().startswith("##"):
+            break
+        if take:
+            s = ln.strip()
+            if s.lower().startswith("accept"):
+                rest = s.split(":", 1)[-1].strip() if ":" in s else ""
+                if rest:
+                    approved.append(rest)
+                continue
+            if s.startswith("-"):
+                item = s.lstrip("- ").strip()
+                if item and item != "-" and not item.startswith("_("):
+                    approved.append(re.sub(r"\s*_\(source:[^)]+\)_\s*$", "", item).strip())
+    if any(x for x in approved if len(x) > 2):
+        return [x for x in approved if len(x) > 2][:20]
+
+    ac: list[str] = []
+    in_accept = False
+    for ln in lines:
+        s = ln.strip()
+        low = s.lower()
+        if low.startswith("accept"):
+            in_accept = True
+            rest = s.split(":", 1)[-1].strip() if ":" in s else ""
             if rest:
-                return rest.split()[0].strip(".,")
-    caps = re.findall(r"\b([A-Z][A-Za-z0-9_-]{1,40})\b", bullet)
-    return caps[-1] if caps else "App"
+                ac.append(rest)
+            continue
+        if in_accept:
+            if s.startswith("##"):
+                break
+            if s.startswith("-"):
+                item = s.lstrip("- ").strip()
+                if item:
+                    ac.append(re.sub(r"\s*_\(source:[^)]+\)_\s*$", "", item).strip())
+    if ac:
+        return ac[:20]
+
+    # fallback: any markdown bullets
+    for ln in lines:
+        s = ln.strip()
+        if s.startswith("-"):
+            item = s.lstrip("- ").strip()
+            if item and not item.startswith("_(") and "source:" not in item.lower():
+                ac.append(item)
+    return ac[:20]
 
 
 def propose_from_markdown(suite_id: str, title: str, body: str) -> tuple[TaskCard, list[Case]]:
     """Draft cases from AC bullets; operator must review then seal."""
-    lines = [ln.strip("- ").strip() for ln in body.splitlines() if ln.strip()]
-    ac: list[str] = []
-    in_accept = False
-    for ln in lines:
-        low = ln.lower()
-        if low.startswith("accept"):
-            in_accept = True
-            rest = ln.split(":", 1)[-1].strip() if ":" in ln else ""
-            if rest:
-                ac.append(rest)
-            continue
-        if in_accept or not any(x.lower().startswith("accept") for x in lines):
-            if not low.startswith("title"):
-                ac.append(ln)
+    ac = _extract_ac(body)
     card = TaskCard(
         id=suite_id,
         title=title,
@@ -49,6 +94,8 @@ def propose_from_markdown(suite_id: str, title: str, body: str) -> tuple[TaskCar
         public_acceptance=ac[:20] or ["behavior matches sealed corpus"],
     )
     cases: list[Case] = []
+    skipped: list[str] = []
+
     for i, bullet in enumerate(ac[:20]):
         low = bullet.lower()
         cid = f"ac-{i + 1}"
@@ -66,23 +113,11 @@ def propose_from_markdown(suite_id: str, title: str, body: str) -> tuple[TaskCar
                     bucket="http",
                     request=req,
                     expect={"status": status},
-                    visible=("health" in path) or i == 0,
+                    visible=("health" in path) or (not cases),
                 )
             )
             continue
-        if any(k in low for k in ("page", "button", "ui ", "browser", "click", "screenshot", "heading", "shows ")):
-            cases.append(
-                Case(
-                    id=cid,
-                    check=CheckMode.ui,
-                    bucket="ui",
-                    request={"path": "/"},
-                    expect={"text": _ui_text(bullet)},
-                    visible=i == 0,
-                )
-            )
-            continue
-        if any(k in low for k in ("golden", "matches fixture", "exact body", "sha256")) and "health" in low:
+        if any(k in low for k in ("golden", "matches fixture", "exact body")) and "health" in low:
             cases.append(
                 Case(
                     id=cid,
@@ -94,7 +129,7 @@ def propose_from_markdown(suite_id: str, title: str, body: str) -> tuple[TaskCar
                 )
             )
             continue
-        if any(k in low for k in ("never", "always", "must not", "invariant", "property")) and any(
+        if any(k in low for k in ("never", "always", "must not", "invariant")) and any(
             x in low for x in ("health", "api", "json", "/api")
         ):
             cases.append(
@@ -138,7 +173,7 @@ def propose_from_markdown(suite_id: str, title: str, body: str) -> tuple[TaskCar
                 )
             )
             continue
-        if "health" in low:
+        if "health" in low and _HTTP.search(bullet) is None and "shows" not in low:
             cases.append(
                 Case(
                     id=cid,
@@ -146,32 +181,35 @@ def propose_from_markdown(suite_id: str, title: str, body: str) -> tuple[TaskCar
                     bucket="health",
                     request={"method": "GET", "path": "/health"},
                     expect={"status": 200, "json_contains": {"ok": True}},
-                    visible=i == 0,
+                    visible=not cases,
                 )
             )
             continue
-        # default: UI text from bullet (SPA-friendly) — not a fake /health
+
+        expect = _ui_expect(bullet)
+        if expect is None:
+            skipped.append(bullet)
+            continue
         cases.append(
             Case(
                 id=cid,
                 check=CheckMode.ui,
-                bucket="general",
-                request={"path": "/"},
-                expect={"text": _ui_text(bullet)},
-                visible=i == 0,
-            )
-        )
-    if not cases:
-        cases = [
-            Case(
-                id="home",
-                check=CheckMode.ui,
                 bucket="ui",
                 request={"path": "/"},
-                expect={"text": "App"},
-                visible=True,
+                expect=expect,
+                visible=not cases,
             )
-        ]
+        )
+
+    for s in skipped:
+        print(f"propose: skipped (need quoted text or text:/selector:): {s}", file=sys.stderr)
+    if not cases:
+        raise ValueError(
+            'no draft cases — add Accept bullets with quoted UI text '
+            '(e.g. shows "Get started") or HTTP paths'
+        )
+    if not any(c.visible for c in cases):
+        cases[0].visible = True
     return card, cases
 
 
