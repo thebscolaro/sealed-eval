@@ -1,4 +1,4 @@
-# SEALed-eval Specification (v0.2)
+# SEALed-eval Specification (v0.3)
 
 Normative protocol for a work-agnostic **sealed evaluation control plane**.
 

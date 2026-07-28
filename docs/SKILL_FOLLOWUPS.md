@@ -14,3 +14,13 @@
 - Child `src/sealed_eval/AGENTS.md` if package grows
 - Full JSONPath library; Postgres `[db]` extra; live AWS fixture
 - Marketplace plugin; Tauri IPC grade mode
+- Propose: refuse unquoted bullets instead of CapWord/`App` guesses (ponytail)
+- Prove `screenshot_sha256` with a mint helper + test, or remove until needed
+- Cold dogfood against a real public clone + `vite preview` (not only create-vite + `dev`)
+
+## Review notes (2026-07-28)
+
+- Ponytail: RUNBOOK threat model restored; org hardcode removed from sibling bootstrap
+- Standards: 0 hard; judgement on propose keyword cascade / untested screenshot hook
+- Spec: SPA dogfood used scaffolded Vite Vue (reliable); stranger-clone still a follow-up
+
