@@ -1,16 +1,8 @@
 # CODER_BOUNDARY.md
 
-Principal: **coder**. Subject repo only.
+Coder agents implement the subject from the **public task** only.
 
-## May
+Prefer skill: `distribution/cursor-plugin/skills/sealed-eval-coder/SKILL.md`.
 
-- Read public task card
-- Implement against public acceptance
-- Maintain soft/local tests for speed
-- Submit artifact URL/base to eval-operator
-
-## Must not
-
-- Request sealed cases, seal tokens, or harness write tools
-- Treat soft tests as proof of done
-- Put hold-outs into subject git history
+Allowed: public task, artifact URL, aggregate `scorecard`.
+Forbidden: seal token, sealed cases, calling `grade` with a token.

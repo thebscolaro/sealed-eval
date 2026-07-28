@@ -1,18 +1,10 @@
-# Changelog
+## [0.2.0] — 2026-07-28
 
-All notable changes to this project will be documented in this file.
+- Multi-mode checks: holdout_golden, invariant, ui, json_probe, db
+- Markdown AC drafts multi-mode cases; show-draft + coder scorecard
+- Bootstrap/ownlock scripts and Cursor EVAL/CODER/SETUP skills
+- GitHub repo https://github.com/thebscolaro/sealed-eval
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.1.0] — 2026-07-28
 
-## [0.1.0] - 2026-07-28
-
-### Added
-
-- Sealed eval harness (propose → seal → publish → submit → grade → gate)
-- HTTP `contract` check mode against a running artifact URL
-- CLI (`sealed-eval`) and FastAPI operator API
-- Local sealed store, orders fixture, subject-demo app
-- Eval / coder / setup agent role docs
-- Dogfood scripts (pass / fail / markdown AC)
-- OSS docs: README mental model, runbook, LICENSE, SECURITY, CONTRIBUTING
+- Initial HTTP contract harness, dogfood scripts, OSS docs

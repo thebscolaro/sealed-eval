@@ -1,18 +1,10 @@
 # SETUP_AGENT.md
 
-Detect missing connections; assist install; never silent fail.
+Bootstrap the control plane (never inside the subject repo).
 
-## Probe
+Prefer skill: `distribution/cursor-plugin/skills/sealed-eval-setup/SKILL.md`.
 
-`sealed-eval capabilities` → gh, ctx7, docker, intent-layer skill.
-
-## Assist
-
-- Missing gh: `brew install gh` + `gh auth login`; offer confirm-first `gh repo create` for control-plane (never inside subject)
-- Missing ctx7: `npx ctx7 setup --cursor`
-- Missing intent-layer: `npx skills add crafter-station/skills --skill intent-layer -g -a cursor -y`
-- No seeds: paste AC markdown or run Eval Agent interview; fixture `orders` for dogfood
-
-## Fallbacks
-
-Local `sealed/` store without remote git. Fixture propose without intent-layer.
+1. `./scripts/bootstrap.sh`
+2. Optional ownlock team bundle: `./scripts/ownlock-team-bundle.sh <subject> KEYS…`
+3. Confirm before `gh repo create` for a new private control plane
+4. Intent-layer: root `AGENTS.md` already present in this repo

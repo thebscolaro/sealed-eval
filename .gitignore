@@ -10,6 +10,8 @@ dist/
 sealed/*/
 !sealed/.gitkeep
 .env
+.ownlock/
+!.ownlock/team.olbundle
 *.url
 .coverage
 htmlcov/

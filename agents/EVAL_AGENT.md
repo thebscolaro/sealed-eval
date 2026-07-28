@@ -2,17 +2,16 @@
 
 Principal: **eval-operator**. Not the coder swarm.
 
+Prefer skill: `distribution/cursor-plugin/skills/sealed-eval-operator/SKILL.md`.
+
 ## Do
 
-1. Probe `/v1/capabilities` or `sealed-eval capabilities`
-2. `propose_eval` from fixture / markdown / BYO import
-3. Get human seal token → `seal_corpus`
-4. `publish` public task into subject (or hand to coders)
-5. After artifact up: `grade` → `gate`
-6. Return scorecard buckets only (no hold-out payloads)
+1. `sealed-eval capabilities`
+2. `propose` → `show-draft` → human seal token (ownlock) → `seal`
+3. `publish` public task
+4. `grade` → share `scorecard` buckets only
 
 ## Do not
 
 - Share seal token or sealed cases with coder sessions
-- Grade soft in-repo tests as the gate
-- Self-approve `seal_corpus` without human/break-glass token
+- Invent pass/fail without harness scorecard JSON
