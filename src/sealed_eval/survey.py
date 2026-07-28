@@ -9,14 +9,21 @@ _SECTION = re.compile(
     r"(?im)^(#{1,3}\s*)?(accept(?:ance)?|criteria|requirements|definition of done)\b.*$"
 )
 _BULLET = re.compile(r"^\s*[-*]\s+(.+)$")
+_GH_NOISE = re.compile(
+    r"(?i)\b(dependabot|renovate)\b|\bchore\s*\(\s*deps|\bbump\s+|deps?-dev|deps?-prod"
+)
 _AC_GLOBS = (
     "**/ACCEPT*.md",
     "**/Accept*.md",
     "**/acceptance*.md",
     "**/AC.md",
+    "**/*criteria*.md",
     "docs/**/*ac*.md",
     "docs/**/*accept*.md",
+    "docs/defects/**/*.md",
 )
+_PRIMARY_CAP = 25
+_HEURISTIC_CAP = 15
 
 
 def _read(path: Path, limit: int = 80_000) -> str:
@@ -59,40 +66,54 @@ def _dedupe(items: list[tuple[str, str]]) -> list[tuple[str, str]]:
     return out
 
 
+def _is_gh_noise(title: str) -> bool:
+    return bool(_GH_NOISE.search(title))
+
+
 def survey_subject(subject_path: Path) -> str:
     """Scan all seed sources; return markdown candidates + novel section. Never seals."""
     root = Path(subject_path).resolve()
     if not root.is_dir():
         raise FileNotFoundError(f"subject not found: {root}")
 
-    found: list[tuple[str, str]] = []
+    primary: list[tuple[str, str]] = []
+    heuristics: list[tuple[str, str]] = []
 
     for pattern in _AC_GLOBS:
         for path in root.glob(pattern):
             if not path.is_file():
                 continue
-            for b in _bullets_from_markdown(_read(path), only_sections=False):
-                found.append((str(path.relative_to(root)), b))
+            # Example-run dumps are agent transcripts, not AC seeds
+            if "example-runs" in path.parts:
+                continue
+            rel = str(path.relative_to(root))
+            # Defect writeups: prefer Accept/Criteria sections; else first few bullets only
+            only_sec = "defects" in path.parts
+            bullets = _bullets_from_markdown(_read(path), only_sections=only_sec)
+            if only_sec and not bullets:
+                bullets = _bullets_from_markdown(_read(path), only_sections=False)[:5]
+            for b in bullets:
+                primary.append((rel, b))
 
     for name in ("AGENTS.md", "CLAUDE.md"):
         p = root / name
         if p.is_file():
             for b in _bullets_from_markdown(_read(p), only_sections=False):
-                found.append((name, b))
+                primary.append((name, b))
 
     doc_paths = [root / "README.md", root / "docs" / "RUNBOOK.md"]
     docs_dir = root / "docs"
     if docs_dir.is_dir():
-        doc_paths.extend(sorted(docs_dir.glob("*.md"))[:30])
+        doc_paths.extend(sorted(docs_dir.rglob("*.md"))[:40])
+    seen_docs: set[Path] = set()
     for p in doc_paths:
-        if not p.is_file():
+        if not p.is_file() or p in seen_docs:
             continue
+        seen_docs.add(p)
         rel = str(p.relative_to(root))
+        # Accept/Criteria sections only — no README feature-bullet dump
         for b in _bullets_from_markdown(_read(p), only_sections=True):
-            found.append((rel, b))
-        if p.name == "README.md":
-            for b in _bullets_from_markdown(_read(p), only_sections=False)[:15]:
-                found.append((f"{rel}:bullet", b))
+            primary.append((rel, b))
 
     if (root / ".git").exists():
         for kind, args in (
@@ -106,8 +127,11 @@ def survey_subject(subject_path: Path) -> str:
                 for row in json.loads(raw or "[]"):
                     title = (row.get("title") or "").strip()
                     num = row.get("number")
-                    if title:
-                        found.append((f"gh:{kind}#{num}", title))
+                    if not title or _is_gh_noise(title):
+                        continue
+                    if kind == "pr" and re.match(r"(?i)^(chore|build|ci|docs)(\(|:|\s)", title):
+                        continue
+                    primary.append((f"gh:{kind}#{num}", title))
             except (OSError, subprocess.SubprocessError, json.JSONDecodeError):
                 pass
 
@@ -116,24 +140,27 @@ def survey_subject(subject_path: Path) -> str:
         try:
             data = json.loads(_read(pkg))
             for name in data.get("scripts") or {}:
-                found.append(("package.json:scripts", f'heuristic: npm script "{name}" exists'))
+                heuristics.append(
+                    ("package.json:scripts", f'heuristic: npm script "{name}" exists')
+                )
         except json.JSONDecodeError:
             pass
 
-    for sub in ("src/views", "src/pages", "src/components", "src/routes"):
+    for sub in ("src/views", "src/pages", "src/components", "src/routes", "web/src"):
         d = root / sub
         if not d.is_dir():
             continue
         for path in sorted(d.rglob("*"))[:40]:
             if path.suffix.lower() in {".vue", ".tsx", ".jsx"} and path.is_file():
-                found.append(
+                heuristics.append(
                     (
                         f"heuristic:{path.relative_to(root)}",
                         f'UI page/component "{path.stem}" is present',
                     )
                 )
 
-    found = _dedupe(found)[:40]
+    primary = _dedupe(primary)[:_PRIMARY_CAP]
+    heuristics = _dedupe(heuristics)[:_HEURISTIC_CAP]
 
     lines = [
         "# Survey candidates",
@@ -146,10 +173,17 @@ def survey_subject(subject_path: Path) -> str:
         "## From repository / tools",
         "",
     ]
-    if not found:
+    if not primary:
         lines.append("- _(no candidates found — fill Novel acceptance below)_")
-    for src, bullet in found:
+    for src, bullet in primary:
         lines.append(f"- {bullet} _(source: {src})_")
+
+    lines.extend(["", "## Low-confidence heuristics", ""])
+    if not heuristics:
+        lines.append("- _(none)_")
+    else:
+        for src, bullet in heuristics:
+            lines.append(f"- {bullet} _(source: {src})_")
 
     lines.extend(
         [

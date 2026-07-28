@@ -9,11 +9,12 @@
 5. **`[db]` / AWS:** deferred packaging; sqlite + local ownlock probes documented.
 6. **HITL AC:** survey scans all sources automatically; human gates = edit/OK (+ novel) and show-draft→seal.
 7. **Propose:** refuse unquoted UI guesses; **screenshot_sha256 dropped** until mint path exists.
+8. **Deploy:** sibling bootstrap = sealed control plane; plugin skills = agent loop; sandbox ≠ either.
 
 ## Still later
 
 - Child `src/sealed_eval/AGENTS.md` if package grows
 - Full JSONPath library; Postgres `[db]` extra; live AWS fixture
-- Marketplace plugin; Tauri IPC grade mode
+- Marketplace plugin install + provenance; Cursor sandbox grade dogfood
 - Optional screenshot mint helper if pixel goldens are needed
 

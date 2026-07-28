@@ -14,7 +14,17 @@ sealed-eval show-draft <suite>   # human confirms
 # then seal → publish → grade
 ```
 
-Survey auto-scans AC files, AGENTS.md, README/docs, `gh` issues/PRs, and light code heuristics. It never seals. UI Accept bullets need quoted text (`shows "Get started"`).
+Survey prioritizes AC-shaped files (`ACCEPT*`, `*criteria*`, `docs/defects/**`), AGENTS/CLAUDE, and Accept/Criteria sections in docs. It skips README feature-bullet dumps and dep-bump/`chore(deps)` PR titles. Package/UI path guesses go under **Low-confidence heuristics**. It never seals. UI Accept bullets need quoted text (`shows "Get started"`).
+
+## Sibling vs plugin vs sandbox
+
+| Piece | Role |
+| --- | --- |
+| `bootstrap-sibling.sh` | Private **control plane** next to a subject (sealed store + ownlock). Correct isolation. |
+| Cursor plugin skills (`distribution/cursor-plugin/`) | Tell the agent the operator/coder/setup loops. Sibling copy includes them under `.cursor/skills/`. |
+| Cursor sandbox | Separate runtime limits. Sibling dogfood does **not** prove sandbox or marketplace plugin install. |
+
+Marketplace plugin provenance is still later — see `docs/SKILL_FOLLOWUPS.md`.
 
 ## Cold install
 

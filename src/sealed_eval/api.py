@@ -10,7 +10,7 @@ from sealed_eval.grader import apply_gate, grade_artifact
 from sealed_eval.propose import load_fixture, propose_from_markdown
 from sealed_eval.store import SealedStore
 
-app = FastAPI(title="SEALed-eval", version="0.3.1")
+app = FastAPI(title="SEALed-eval", version="0.3.2")
 
 
 def _store() -> SealedStore:

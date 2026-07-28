@@ -1,3 +1,9 @@
+## [0.3.2] — 2026-07-28
+
+- Drop Contributor Covenant `CODE_OF_CONDUCT.md`
+- Survey: no README feature-bullet dump; skip dep-bump PRs; quarantine heuristics
+- Docs: sibling vs plugin vs sandbox; `docs/dogfood-fullstack.md`
+
 ## [0.3.1] — 2026-07-28
 
 - `survey-subject` CLI (all seed sources + novel AC section); HITL operator skill
