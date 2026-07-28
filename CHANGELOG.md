@@ -1,3 +1,10 @@
+## [0.3.0] — 2026-07-28
+
+- Draw.io architecture + operator-loop PNGs in README
+- Richer markdown propose (SPA-friendly UI defaults; no blanket /health stubs)
+- Sibling bootstrap (`bootstrap-sibling.sh`) and `.cursor/skills` symlinks
+- UI screenshot_sha256 golden hook; OwnAuth caveat in RUNBOOK
+
 ## [0.2.0] — 2026-07-28
 
 - Multi-mode checks: holdout_golden, invariant, ui, json_probe, db

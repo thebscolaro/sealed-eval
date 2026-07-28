@@ -36,10 +36,10 @@ Coder profile: public task, submit artifact ref, read aggregate scorecard.
 
 - `contract` — HTTP black-box
 - `holdout_golden` — sealed expected / sha256
-- `invariant` — property predicates on I/O
-- `ui` — Playwright
+- `invariant` — property predicates on I/O (`regex`, `never_contains`, **dotted** `jsonpath_equals` — not full JSONPath)
+- `ui` — Playwright text / selector / optional `screenshot_sha256`
 - `json_probe` — sealed argv → JSON asserts (AWS CLI etc. under ownlock)
-- `db` — read-only SQL via env DSN
+- `db` — read-only SQL via env DSN (sqlite stdlib; optional psycopg)
 - `differential` / `cli` — later
 
 ## Seeds
