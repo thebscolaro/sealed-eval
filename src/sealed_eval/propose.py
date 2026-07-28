@@ -7,10 +7,23 @@ from sealed_eval.capabilities import import_cases_json
 from sealed_eval.models import Case, CheckMode, TaskCard
 
 _FIXTURES = Path(__file__).resolve().parents[2] / "fixtures"
-_HTTP = re.compile(
-    r"\b(GET|POST|PUT|PATCH|DELETE)\s+(/\S+)",
-    re.I,
-)
+_HTTP = re.compile(r"\b(GET|POST|PUT|PATCH|DELETE)\s+(/\S+)", re.I)
+_QUOTED = re.compile(r'["“]([^"”]+)["”]|\'([^\']+)\'')
+
+
+def _ui_text(bullet: str) -> str:
+    m = _QUOTED.search(bullet)
+    if m:
+        return next(g for g in m.groups() if g)
+    for marker in ("shows ", "contain ", "contains ", "heading ", "title "):
+        low = bullet.lower()
+        idx = low.find(marker)
+        if idx >= 0:
+            rest = bullet[idx + len(marker) :].strip(" .")
+            if rest:
+                return rest.split()[0].strip(".,")
+    caps = re.findall(r"\b([A-Z][A-Za-z0-9_-]{1,40})\b", bullet)
+    return caps[-1] if caps else "App"
 
 
 def propose_from_markdown(suite_id: str, title: str, body: str) -> tuple[TaskCard, list[Case]]:
@@ -42,7 +55,6 @@ def propose_from_markdown(suite_id: str, title: str, body: str) -> tuple[TaskCar
         m = _HTTP.search(bullet)
         if m:
             method, path = m.group(1).upper(), m.group(2).rstrip(".,)")
-            visible = "health" in path or i == 0
             status = 201 if method == "POST" else 200
             req: dict = {"method": method, "path": path}
             if method == "POST" and path.rstrip("/").endswith("orders"):
@@ -54,11 +66,23 @@ def propose_from_markdown(suite_id: str, title: str, body: str) -> tuple[TaskCar
                     bucket="http",
                     request=req,
                     expect={"status": status},
-                    visible=visible,
+                    visible=("health" in path) or i == 0,
                 )
             )
             continue
-        if any(k in low for k in ("golden", "matches fixture", "exact body", "sha256")):
+        if any(k in low for k in ("page", "button", "ui ", "browser", "click", "screenshot", "heading", "shows ")):
+            cases.append(
+                Case(
+                    id=cid,
+                    check=CheckMode.ui,
+                    bucket="ui",
+                    request={"path": "/"},
+                    expect={"text": _ui_text(bullet)},
+                    visible=i == 0,
+                )
+            )
+            continue
+        if any(k in low for k in ("golden", "matches fixture", "exact body", "sha256")) and "health" in low:
             cases.append(
                 Case(
                     id=cid,
@@ -70,26 +94,16 @@ def propose_from_markdown(suite_id: str, title: str, body: str) -> tuple[TaskCar
                 )
             )
             continue
-        if any(k in low for k in ("never", "always", "must not", "invariant", "property")):
+        if any(k in low for k in ("never", "always", "must not", "invariant", "property")) and any(
+            x in low for x in ("health", "api", "json", "/api")
+        ):
             cases.append(
                 Case(
                     id=cid,
                     check=CheckMode.invariant,
                     bucket="invariant",
                     request={"method": "GET", "path": "/health"},
-                    expect={"status": 200, "never_contains": ["traceback"]},
-                    visible=False,
-                )
-            )
-            continue
-        if any(k in low for k in ("page", "button", "ui ", "browser", "click", "screenshot")):
-            cases.append(
-                Case(
-                    id=cid,
-                    check=CheckMode.ui,
-                    bucket="ui",
-                    request={"path": "/"},
-                    expect={"text": "Orders"},
+                    expect={"status": 200, "never_contains": ["traceback", "secret"]},
                     visible=False,
                 )
             )
@@ -112,31 +126,49 @@ def propose_from_markdown(suite_id: str, title: str, body: str) -> tuple[TaskCar
                     id=cid,
                     check=CheckMode.json_probe,
                     bucket="probe",
-                    request={"argv": ["echo", "{}"]},
-                    expect={"exit_code": 0},
+                    request={
+                        "argv": [
+                            "python3",
+                            "-c",
+                            "import json; print(json.dumps({'ok': True}))",
+                        ]
+                    },
+                    expect={"exit_code": 0, "jsonpath_equals": {"ok": True}},
                     visible=False,
                 )
             )
             continue
-        # default: visible contract health if nothing matched yet
+        if "health" in low:
+            cases.append(
+                Case(
+                    id=cid,
+                    check=CheckMode.contract,
+                    bucket="health",
+                    request={"method": "GET", "path": "/health"},
+                    expect={"status": 200, "json_contains": {"ok": True}},
+                    visible=i == 0,
+                )
+            )
+            continue
+        # default: UI text from bullet (SPA-friendly) — not a fake /health
         cases.append(
             Case(
                 id=cid,
-                check=CheckMode.contract,
+                check=CheckMode.ui,
                 bucket="general",
-                request={"method": "GET", "path": "/health"},
-                expect={"status": 200, "json_contains": {"ok": True}},
+                request={"path": "/"},
+                expect={"text": _ui_text(bullet)},
                 visible=i == 0,
             )
         )
     if not cases:
         cases = [
             Case(
-                id="health",
-                check=CheckMode.contract,
-                bucket="health",
-                request={"method": "GET", "path": "/health"},
-                expect={"status": 200, "json_contains": {"ok": True}},
+                id="home",
+                check=CheckMode.ui,
+                bucket="ui",
+                request={"path": "/"},
+                expect={"text": "App"},
                 visible=True,
             )
         ]

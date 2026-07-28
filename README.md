@@ -6,29 +6,19 @@
 
 SEALed-eval (SE) is a sealed evaluation control plane for coding agents. It lives in its **own repo/process**, drafts and seals hold-out cases, publishes a **public task** to coder agents, then grades a **running artifact**. Coders never see hold-out payloads.
 
-Skills orchestrate; the harness judges. See [docs/architecture.drawio](docs/architecture.drawio).
+Skills orchestrate; the harness judges.
 
-## How it works
+![Architecture](docs/architecture.drawio.png)
 
-```text
-AC / fixtures / OpenAPI  -->  propose (draft)  -->  human seal (ownlock SEAL_TOKEN)
-                                      |                     |
-                                      v                     v
-                              public task card        sealed cases
-                                      |                     |
-                                 coder agents               |
-                                      |                     |
-                                      v                     v
-                         running artifact URL  <--  grade (check adapters)
-                                      |
-                                      v
-                         scorecard buckets (coder-safe)
-```
+![Operator loop](docs/operator-loop.drawio.png)
+
+Editable sources: [architecture.drawio](docs/architecture.drawio), [operator-loop.drawio](docs/operator-loop.drawio).
 
 1. **Seeds draft; seal grades.** Markdown AC / fixtures invent *draft* cases. Only a human seal token makes them authoritative.
-2. **Check modes** hit the artifact (HTTP, golden body, invariants, Playwright UI, JSON CLI probes, read-only SQL).
+2. **Check modes** hit the artifact (HTTP, golden, invariants, Playwright UI, JSON probes, read-only SQL).
 3. **Coder sees** public task + aggregate scorecard — never sealed expects.
 4. **Secrets:** prefer `ownlock run -- sealed-eval …` and `./scripts/bootstrap.sh`.
+5. **Sibling control plane:** `./scripts/bootstrap-sibling.sh /path/to/subject` → `{name}-sealed-eval`.
 
 ## Check modes
 
@@ -36,10 +26,10 @@ AC / fixtures / OpenAPI  -->  propose (draft)  -->  human seal (ownlock SEAL_TOK
 | --- | --- | --- |
 | `contract` | HTTP request + assert response | Works |
 | `holdout_golden` | Sealed expected body / sha256 | Works |
-| `invariant` | regex / never_contains / jsonpath | Works |
-| `ui` | Playwright text/selector | Works (extra `[ui]`) |
+| `invariant` | regex / never_contains / dotted jsonpath | Works |
+| `ui` | Playwright text/selector/screenshot hash | Works (`[ui]`) |
 | `json_probe` | Sealed argv → JSON stdout asserts | Works |
-| `db` | Read-only SQL via `DATABASE_URL` | Works (sqlite stdlib; psycopg optional) |
+| `db` | Read-only SQL via `DATABASE_URL` | Works (sqlite; psycopg optional) |
 | `differential` / `cli` | Specced | Later |
 
 ## Quick start
@@ -47,28 +37,20 @@ AC / fixtures / OpenAPI  -->  propose (draft)  -->  human seal (ownlock SEAL_TOK
 ```bash
 git clone https://github.com/thebscolaro/sealed-eval && cd sealed-eval
 ./scripts/bootstrap.sh
-./scripts/dogfood-install-path.sh   # propose → show-draft → seal → grade → scorecard
-./scripts/dogfood-multimode.sh
-./scripts/dogfood-probe-db.sh
+./scripts/dogfood-install-path.sh
 ```
 
-Manual loop:
+For a subject app:
 
 ```bash
-uvicorn app:app --app-dir subject-demo --port 8080
-TOKEN=$(sealed-eval new-token)   # or: ownlock run -- printenv SEAL_TOKEN
-sealed-eval propose orders-v1 --fixture orders
-sealed-eval show-draft orders-v1
-sealed-eval seal orders-v1 "$TOKEN"
-sealed-eval publish orders-v1
-sealed-eval grade orders-v1 http://127.0.0.1:8080 "$TOKEN"
-sealed-eval scorecard orders-v1   # coder-safe
+./scripts/bootstrap-sibling.sh ~/code/my-app
+# then in the sibling repo: propose → seal → grade the running Vite/API URL
 ```
 
-Cursor skills: `distribution/cursor-plugin/skills/` (operator / coder / setup).
+Cursor project skills: `.cursor/skills/` (symlinked from `distribution/cursor-plugin/skills/`).
 
 ## Docs
 
-- [Runbook](docs/RUNBOOK.md) · [SPEC.md](SPEC.md) · [AGENTS.md](AGENTS.md) · [CHANGELOG.md](CHANGELOG.md)
+- [Runbook](docs/RUNBOOK.md) · [SPEC.md](SPEC.md) · [AGENTS.md](AGENTS.md) · [CHANGELOG.md](CHANGELOG.md) · [github-security](docs/github-security.md)
 
 MIT. Keep seal tokens out of issues and CI logs.

@@ -8,8 +8,8 @@ from sealed_eval.propose import propose_from_markdown
 def test_propose_markdown_modes():
     body = """Accept:
 - GET /health returns 200
-- response never contains traceback
-- UI page shows Orders
+- Health response never contains traceback
+- UI page shows "Hello"
 - health golden matches ok
 """
     card, cases = propose_from_markdown("t1", "T", body)
@@ -19,9 +19,19 @@ def test_propose_markdown_modes():
     assert CheckMode.invariant in modes
     assert CheckMode.ui in modes
     assert CheckMode.holdout_golden in modes
+    ui = next(c for c in cases if c.check == CheckMode.ui)
+    assert ui.expect.get("text") == "Hello"
 
 
-def test_invariant_never_contains(tmp_path=None):
+def test_propose_default_is_ui_not_health():
+    body = "Accept:\n- Landing page shows Welcome"
+    _, cases = propose_from_markdown("t2", "T", body)
+    assert cases[0].check == CheckMode.ui
+    assert cases[0].request.get("path") == "/"
+    assert "Welcome" in cases[0].expect.get("text", "")
+
+
+def test_invariant_never_contains():
     case = Case(
         id="i",
         check=CheckMode.invariant,

@@ -246,7 +246,7 @@ def run_db(case: Case, base_url: str, ctx: dict[str, Any]) -> tuple[bool, str]:
 
 
 def run_ui(case: Case, base_url: str, ctx: dict[str, Any]) -> tuple[bool, str]:
-    """Playwright text/selector asserts against base_url + path."""
+    """Playwright text/selector/screenshot asserts against base_url + path."""
     del ctx
     try:
         from playwright.sync_api import sync_playwright
@@ -260,17 +260,29 @@ def run_ui(case: Case, base_url: str, ctx: dict[str, Any]) -> tuple[bool, str]:
             browser = p.chromium.launch(headless=True)
             page = browser.new_page()
             page.goto(url, wait_until="domcontentloaded", timeout=15000)
-            if "text" in expect and expect["text"] not in page.content():
+            html = page.content()
+            if "text" in expect and expect["text"] not in html:
                 browser.close()
                 return False, "text_missing"
+            for s in expect.get("never_contains") or []:
+                if str(s) in html:
+                    browser.close()
+                    return False, f"never_contains:{s}"
             if "selector" in expect:
                 loc = page.locator(expect["selector"])
                 if loc.count() < 1:
                     browser.close()
                     return False, "selector_missing"
-                if "selector_text" in expect and expect["selector_text"] not in (loc.first.text_content() or ""):
+                if "selector_text" in expect and expect["selector_text"] not in (
+                    loc.first.text_content() or ""
+                ):
                     browser.close()
                     return False, "selector_text"
+            if "screenshot_sha256" in expect:
+                dig = hashlib.sha256(page.screenshot(full_page=True)).hexdigest()
+                if dig != expect["screenshot_sha256"]:
+                    browser.close()
+                    return False, "screenshot_sha256"
             browser.close()
     except Exception as e:  # noqa: BLE001
         return False, f"ui_error:{type(e).__name__}"
