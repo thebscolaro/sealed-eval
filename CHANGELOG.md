@@ -1,3 +1,8 @@
+## [0.3.4] — 2026-08-03
+
+- Windows PowerShell bootstrap: `bootstrap.ps1`, `bootstrap-sibling.ps1`, `install-cursor-plugin-local.ps1`
+- Docs: lifecycle (seal rarely / grade often) + do not mix WSL with Win-native ownlock
+
 ## [0.3.3] — 2026-08-03
 
 - Harden suite_id / draft auth / fixtures-only import; seal compare_digest

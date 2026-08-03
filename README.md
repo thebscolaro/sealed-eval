@@ -17,9 +17,21 @@ Editable sources: [architecture.drawio](docs/architecture.drawio), [operator-loo
 1. **Seeds draft; seal grades.** Markdown AC / fixtures invent *draft* cases. A **seal token** (secret password for the judge, usually `SEAL_TOKEN` in ownlock) locks the suite so the coder cannot rewrite the grade.
 2. **Check modes** hit the artifact (HTTP, golden, invariants, Playwright UI, JSON probes, read-only SQL).
 3. **Coder sees** public task + aggregate scorecard — never sealed expects.
-4. **Secrets:** prefer `ownlock run -- sealed-eval …` and `./scripts/bootstrap.sh`. Keep sibling control planes **private**.
-5. **Sibling control plane:** `./scripts/bootstrap-sibling.sh /path/to/subject` → `{name}-sealed-eval`.
-6. **Containers:** `./scripts/container-compose.sh` prefers Podman, falls back to Docker (same `Dockerfile` / compose names).
+4. **Secrets:** prefer `ownlock run -- sealed-eval …` and bootstrap scripts. Keep sibling control planes **private**.
+5. **Sibling control plane:** `bootstrap-sibling` next to the subject → `{name}-sealed-eval`.
+6. **Containers:** `scripts/container-compose.sh` prefers Podman, falls back to Docker (same `Dockerfile` / compose names).
+
+## How SE is meant to run
+
+SE is a **long-lived sibling judge**, not a one-shot script and not an auto-updater on every commit.
+
+| Cadence | Action |
+| --- | --- |
+| When AC matters | Survey → human OK → propose → show-draft → **seal** |
+| Whenever you need a verdict | Running app URL → **grade** → scorecard |
+| When requirements change | Reseal (human OK again) |
+
+CI is optional (private job + seal token + preview URL). Not required for local/operator use. Details: [WORK_INSTALL.md](docs/WORK_INSTALL.md).
 
 ## Check modes
 
@@ -35,24 +47,29 @@ Editable sources: [architecture.drawio](docs/architecture.drawio), [operator-loo
 
 ## Quick start
 
+**macOS / Linux**
+
 ```bash
 git clone https://github.com/thebscolaro/sealed-eval && cd sealed-eval
 ./scripts/bootstrap.sh
-./scripts/dogfood-install-path.sh
-```
-
-For a subject app:
-
-```bash
 ./scripts/bootstrap-sibling.sh ~/code/my-app
-# then in the sibling repo: propose → seal → grade the running Vite/API URL
 ```
+
+**Windows (PowerShell — same shell as ownlock)**
+
+```powershell
+git clone https://github.com/thebscolaro/sealed-eval; cd sealed-eval
+.\scripts\bootstrap.ps1
+.\scripts\bootstrap-sibling.ps1 C:\path\to\my-app
+```
+
+Do not mix WSL and native Windows for ownlock/SE (if ownlock is on PowerShell PATH, use the `.ps1` scripts).
 
 ## Work laptop / another machine
 
-Marketplace listing is **not** required. Clone this repo, `bootstrap-sibling` next to your app, keep the sibling private, optionally `./scripts/install-cursor-plugin-local.sh`. Full steps: **[docs/WORK_INSTALL.md](docs/WORK_INSTALL.md)**.
+Marketplace listing is **not** required. Full steps (lifecycle, Windows, skills): **[docs/WORK_INSTALL.md](docs/WORK_INSTALL.md)**.
 
-Cursor skills ship under `distribution/cursor-plugin/skills/` (also copied into the sibling as `.cursor/skills/`).
+Cursor skills: `distribution/cursor-plugin/skills/` (copied into the sibling as `.cursor/skills/`), or `install-cursor-plugin-local.ps1` / `.sh`.
 
 ## Docs
 

@@ -10,7 +10,7 @@ from sealed_eval.grader import grade_artifact
 from sealed_eval.propose import load_fixture, propose_from_markdown
 from sealed_eval.store import SealedStore
 
-app = FastAPI(title="SEALed-eval", version="0.3.3")
+app = FastAPI(title="SEALed-eval", version="0.3.4")
 
 _FIXTURES = Path(__file__).resolve().parents[2] / "fixtures"
 

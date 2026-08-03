@@ -4,6 +4,8 @@
 
 Skills tell agents **when** to call SE. The harness **seals and grades**. Intent-layer (`AGENTS.md` on the subject) helps agents understand the app; SE is a **sibling** judge repo.
 
+**Cadence:** seal when acceptance changes (human OK); grade often against a running artifact; cases do not auto-rewrite on every commit. See [WORK_INSTALL.md](WORK_INSTALL.md).
+
 ## AC seeding (HITL)
 
 ```bash
@@ -36,7 +38,9 @@ git clone https://github.com/thebscolaro/sealed-eval && cd sealed-eval
 ./scripts/dogfood-install-path.sh
 ```
 
-`bootstrap.sh` creates a venv, installs the package, and writes `.env` with `SEAL_TOKEN` (vault-ref if ownlock works). For a **work app on another machine**, see [WORK_INSTALL.md](WORK_INSTALL.md).
+Windows PowerShell: `.\scripts\bootstrap.ps1` (use the same shell where `ownlock` is installed — not WSL if ownlock is Win-native).
+
+`bootstrap` creates a venv, installs the package, and writes `.env` with `SEAL_TOKEN` (vault-ref if ownlock works). For a **work app on another machine**, see [WORK_INSTALL.md](WORK_INSTALL.md).
 
 ## Sibling control plane (real subject)
 
@@ -44,6 +48,8 @@ git clone https://github.com/thebscolaro/sealed-eval && cd sealed-eval
 ./scripts/bootstrap-sibling.sh /path/to/subject [optional-name]
 # creates ../{name}-sealed-eval, optional private GH repo, subject SEALED_EVAL.md
 ```
+
+Windows: `.\scripts\bootstrap-sibling.ps1 C:\path\to\subject [optional-name]`
 
 Team secrets: `./scripts/ownlock-team-bundle.sh /path/to/subject SEAL_TOKEN` — enter the bundle passphrase when prompted (1Password / out-of-band; never commit it).
 
