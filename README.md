@@ -14,10 +14,10 @@ Skills orchestrate; the harness judges.
 
 Editable sources: [architecture.drawio](docs/architecture.drawio), [operator-loop.drawio](docs/operator-loop.drawio).
 
-1. **Seeds draft; seal grades.** Markdown AC / fixtures invent *draft* cases. Only a human seal token makes them authoritative.
+1. **Seeds draft; seal grades.** Markdown AC / fixtures invent *draft* cases. A **seal token** (secret password for the judge, usually `SEAL_TOKEN` in ownlock) locks the suite so the coder cannot rewrite the grade.
 2. **Check modes** hit the artifact (HTTP, golden, invariants, Playwright UI, JSON probes, read-only SQL).
 3. **Coder sees** public task + aggregate scorecard — never sealed expects.
-4. **Secrets:** prefer `ownlock run -- sealed-eval …` and `./scripts/bootstrap.sh`.
+4. **Secrets:** prefer `ownlock run -- sealed-eval …` and `./scripts/bootstrap.sh`. Keep sibling control planes **private**.
 5. **Sibling control plane:** `./scripts/bootstrap-sibling.sh /path/to/subject` → `{name}-sealed-eval`.
 6. **Containers:** `./scripts/container-compose.sh` prefers Podman, falls back to Docker (same `Dockerfile` / compose names).
 
@@ -48,12 +48,15 @@ For a subject app:
 # then in the sibling repo: propose → seal → grade the running Vite/API URL
 ```
 
-Cursor project skills: `.cursor/skills/` (symlinked from `distribution/cursor-plugin/skills/`).
+## Work laptop / another machine
+
+Marketplace listing is **not** required. Clone this repo, `bootstrap-sibling` next to your app, keep the sibling private, optionally `./scripts/install-cursor-plugin-local.sh`. Full steps: **[docs/WORK_INSTALL.md](docs/WORK_INSTALL.md)**.
+
+Cursor skills ship under `distribution/cursor-plugin/skills/` (also copied into the sibling as `.cursor/skills/`).
 
 ## Docs
 
-- [Runbook](docs/RUNBOOK.md) · [SPEC.md](SPEC.md) · [AGENTS.md](AGENTS.md) · [CHANGELOG.md](CHANGELOG.md) · [github-security](docs/github-security.md)
+- [Work install](docs/WORK_INSTALL.md) · [Runbook](docs/RUNBOOK.md) · [SPEC.md](SPEC.md) · [AGENTS.md](AGENTS.md) · [CHANGELOG.md](CHANGELOG.md) · [github-security](docs/github-security.md)
 - Dogfoods: [SPA](docs/dogfood-spa.md) · [fullstack](docs/dogfood-fullstack.md) · [mid-size](docs/dogfood-midsize.md) · [plugin + sandbox](docs/dogfood-plugin-sandbox.md)
-- Local Cursor plugin: `./scripts/install-cursor-plugin-local.sh` → `~/.cursor/plugins/local/sealed-eval`
 
 MIT. Keep seal tokens out of issues and CI logs.

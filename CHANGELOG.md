@@ -3,13 +3,14 @@
 - Harden suite_id / draft auth / fixtures-only import; seal compare_digest
 - Podman-or-Docker via `scripts/container-compose.sh`; compose bind 127.0.0.1
 - Drop unused deps/schemas; quieter survey; sandbox dogfood via `agent --sandbox`
+- Docs: work-machine install without Marketplace (`docs/WORK_INSTALL.md`)
 
 ## [0.3.2] — 2026-08-03
 
 - Drop Contributor Covenant `CODE_OF_CONDUCT.md`
 - Survey: no README feature-bullet dump; skip dep-bump PRs; quarantine heuristics
 - Docs: sibling vs plugin vs sandbox; fullstack + plugin/sandbox dogfoods
-- Local Cursor plugin install script; project `.cursor/cli.json` sandbox enable
+- Local Cursor plugin install script (`install-cursor-plugin-local.sh`)
 
 ## [0.3.1] — 2026-07-28
 
