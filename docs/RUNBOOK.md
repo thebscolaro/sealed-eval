@@ -36,7 +36,7 @@ git clone https://github.com/thebscolaro/sealed-eval && cd sealed-eval
 ./scripts/dogfood-install-path.sh
 ```
 
-`bootstrap.sh` creates a venv, installs the package, and writes `.env` with `SEAL_TOKEN` (vault-ref if ownlock works).
+`bootstrap.sh` creates a venv, installs the package, and writes `.env` with `SEAL_TOKEN` (vault-ref if ownlock works). For a **work app on another machine**, see [WORK_INSTALL.md](WORK_INSTALL.md).
 
 ## Sibling control plane (real subject)
 

@@ -2,7 +2,7 @@
   "task_card": {
     "id": "lab-full",
     "title": "QA lab multi-mode",
-    "summary": "HTTP contracts, golden, invariants, UI, json_probe, and sqlite — not health-only",
+    "summary": "Example suite for DwonnG/qa-automation-lab (public demo PIN 000000). HTTP contracts, golden, invariants, UI, json_probe, sqlite — not health-only.",
     "public_acceptance": [
       "GET /api/health returns ok",
       "OpenAPI schema is reachable",
