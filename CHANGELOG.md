@@ -1,3 +1,10 @@
+## [0.3.2] — 2026-08-03
+
+- Drop Contributor Covenant `CODE_OF_CONDUCT.md`
+- Survey: no README feature-bullet dump; skip dep-bump PRs; quarantine heuristics
+- Docs: sibling vs plugin vs sandbox; fullstack + plugin/sandbox dogfoods
+- Local Cursor plugin install script; project `.cursor/cli.json` sandbox enable
+
 ## [0.3.1] — 2026-07-28
 
 - `survey-subject` CLI (all seed sources + novel AC section); HITL operator skill

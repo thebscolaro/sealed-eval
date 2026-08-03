@@ -1,5 +1,13 @@
 {
   "name": "sealed-eval",
-  "version": "0.1.0",
-  "description": "SEALed-eval eval-operator client"
+  "version": "0.3.2",
+  "description": "SEALed-eval operator, coder, and setup skills — seal outside the subject, grade running artifacts",
+  "author": {
+    "name": "SEALed-eval contributors"
+  },
+  "homepage": "https://github.com/thebscolaro/sealed-eval",
+  "repository": "https://github.com/thebscolaro/sealed-eval",
+  "license": "MIT",
+  "keywords": ["evaluation", "sealed", "agents", "testing"],
+  "skills": "./skills"
 }

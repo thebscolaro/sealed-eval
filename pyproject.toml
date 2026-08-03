@@ -1,6 +1,6 @@
 [project]
 name = "sealed-eval"
-version = "0.3.1"
+version = "0.3.2"
 description = "Sealed evaluation control plane for coding agents — grade running artifacts outside the coder's reach"
 readme = "README.md"
 license = "MIT"

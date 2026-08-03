@@ -54,12 +54,25 @@ Accept:
 
 def test_survey_subject_smoke(tmp_path):
     (tmp_path / "README.md").write_text(
-        "# App\n\n## Acceptance\n- Page shows \"Hi\"\n", encoding="utf-8"
+        "# App\n\n- Fancy feature bullet\n\n## Acceptance\n- Page shows \"Hi\"\n",
+        encoding="utf-8",
     )
+    (tmp_path / "package.json").write_text('{"scripts":{"dev":"vite"}}', encoding="utf-8")
     text = survey_subject(tmp_path)
     assert "Survey candidates" in text
     assert "Novel acceptance" in text
+    assert "Low-confidence heuristics" in text
     assert "Hi" in text or "shows" in text.lower()
+    assert "Fancy feature bullet" not in text
+    assert 'npm script "dev"' in text
+
+
+def test_survey_skips_dep_bump_titles():
+    from sealed_eval.survey import _is_gh_noise
+
+    assert _is_gh_noise("chore(deps-dev): bump vite from 5 to 6")
+    assert _is_gh_noise("Bump eslint from 8 to 9")
+    assert not _is_gh_noise("Add PIN login acceptance")
 
 
 def test_invariant_never_contains():
