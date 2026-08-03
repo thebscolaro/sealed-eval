@@ -15,6 +15,7 @@
 
 - Child `src/sealed_eval/AGENTS.md` if package grows
 - Full JSONPath library; Postgres `[db]` extra; live AWS fixture
-- Official Cursor marketplace listing (submit at marketplace/publish; local plugin + project sandbox dogfooded)
+- Official Cursor marketplace listing (submit at marketplace/publish; local plugin + `--sandbox` dogfooded)
+- Full Traefik/Postgres bring-up for full-stack-fastapi-template grade (suite sealed; stub grade documented)
 - Optional screenshot mint helper if pixel goldens are needed
 

@@ -10,7 +10,8 @@ _SECTION = re.compile(
 )
 _BULLET = re.compile(r"^\s*[-*]\s+(.+)$")
 _GH_NOISE = re.compile(
-    r"(?i)\b(dependabot|renovate)\b|\bchore\s*\(\s*deps|\bbump\s+|deps?-dev|deps?-prod"
+    r"(?i)\b(dependabot|renovate)\b|\bchore\s*\(\s*deps|\bbump\s+|deps?-dev|deps?-prod|"
+    r"^⬆\s*update\b|\brequirement from\b"
 )
 _AC_GLOBS = (
     "**/ACCEPT*.md",
@@ -18,12 +19,13 @@ _AC_GLOBS = (
     "**/acceptance*.md",
     "**/AC.md",
     "**/*criteria*.md",
-    "docs/**/*ac*.md",
     "docs/**/*accept*.md",
+    "docs/**/*criteria*.md",
     "docs/defects/**/*.md",
 )
 _PRIMARY_CAP = 25
 _HEURISTIC_CAP = 15
+_HEURISTIC_SCRIPTS = frozenset({"test", "lint", "build", "check", "typecheck"})
 
 
 def _read(path: Path, limit: int = 80_000) -> str:
@@ -98,7 +100,7 @@ def survey_subject(subject_path: Path) -> str:
     for name in ("AGENTS.md", "CLAUDE.md"):
         p = root / name
         if p.is_file():
-            for b in _bullets_from_markdown(_read(p), only_sections=False):
+            for b in _bullets_from_markdown(_read(p), only_sections=True):
                 primary.append((name, b))
 
     doc_paths = [root / "README.md", root / "docs" / "RUNBOOK.md"]
@@ -140,9 +142,10 @@ def survey_subject(subject_path: Path) -> str:
         try:
             data = json.loads(_read(pkg))
             for name in data.get("scripts") or {}:
-                heuristics.append(
-                    ("package.json:scripts", f'heuristic: npm script "{name}" exists')
-                )
+                if name in _HEURISTIC_SCRIPTS or name.startswith("test"):
+                    heuristics.append(
+                        ("package.json:scripts", f'heuristic: npm script "{name}" exists')
+                    )
         except json.JSONDecodeError:
             pass
 
@@ -150,7 +153,7 @@ def survey_subject(subject_path: Path) -> str:
         d = root / sub
         if not d.is_dir():
             continue
-        for path in sorted(d.rglob("*"))[:40]:
+        for path in sorted(d.rglob("*"))[:10]:
             if path.suffix.lower() in {".vue", ".tsx", ".jsx"} and path.is_file():
                 heuristics.append(
                     (

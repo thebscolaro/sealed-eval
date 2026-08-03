@@ -11,13 +11,29 @@ def probe() -> dict[str, dict[str, bool | str]]:
     tools = {
         "gh": "GitHub CLI",
         "ctx7": "Context7 docs CLI",
-        "docker": "Docker",
         "ownlock": "ownlock secret broker",
     }
     out: dict[str, dict[str, bool | str]] = {}
     for cmd, label in tools.items():
         path = shutil.which(cmd)
         out[cmd] = {"available": bool(path), "label": label, "path": path or ""}
+
+    podman = shutil.which("podman")
+    docker = shutil.which("docker")
+    runtime = "podman" if podman else ("docker" if docker else "")
+    out["containers"] = {
+        "available": bool(runtime),
+        "label": "Podman or Docker (Dockerfile/compose names)",
+        "path": (podman or docker or ""),
+        "runtime": runtime,
+    }
+    # back-compat key for older scripts/docs
+    out["docker"] = {
+        "available": bool(docker or podman),
+        "label": "Container runtime (docker|podman)",
+        "path": docker or podman or "",
+    }
+
     skill = Path.home() / ".agents" / "skills" / "intent-layer" / "SKILL.md"
     out["intent-layer"] = {
         "available": skill.exists(),
@@ -31,17 +47,6 @@ def probe() -> dict[str, dict[str, bool | str]]:
     except ImportError:
         out["playwright"] = {"available": False, "label": "Playwright", "path": ""}
     return out
-
-
-def load_intent_layer_hints(subject_root: Path | None) -> list[str]:
-    if not subject_root:
-        return []
-    hints: list[str] = []
-    for name in ("AGENTS.md", "CLAUDE.md"):
-        p = subject_root / name
-        if p.exists():
-            hints.append(p.read_text(encoding="utf-8")[:4000])
-    return hints
 
 
 def import_cases_json(path: Path) -> tuple[TaskCard, list[Case]]:
