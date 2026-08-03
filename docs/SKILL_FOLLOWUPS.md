@@ -15,6 +15,6 @@
 
 - Child `src/sealed_eval/AGENTS.md` if package grows
 - Full JSONPath library; Postgres `[db]` extra; live AWS fixture
-- Marketplace plugin install + provenance; Cursor sandbox grade dogfood
+- Official Cursor marketplace listing (submit at marketplace/publish; local plugin + project sandbox dogfooded)
 - Optional screenshot mint helper if pixel goldens are needed
 

@@ -52,6 +52,7 @@ Cursor project skills: `.cursor/skills/` (symlinked from `distribution/cursor-pl
 ## Docs
 
 - [Runbook](docs/RUNBOOK.md) · [SPEC.md](SPEC.md) · [AGENTS.md](AGENTS.md) · [CHANGELOG.md](CHANGELOG.md) · [github-security](docs/github-security.md)
-- Dogfoods: [SPA](docs/dogfood-spa.md) · [fullstack](docs/dogfood-fullstack.md)
+- Dogfoods: [SPA](docs/dogfood-spa.md) · [fullstack](docs/dogfood-fullstack.md) · [plugin + sandbox](docs/dogfood-plugin-sandbox.md)
+- Local Cursor plugin: `./scripts/install-cursor-plugin-local.sh` → `~/.cursor/plugins/local/sealed-eval`
 
 MIT. Keep seal tokens out of issues and CI logs.

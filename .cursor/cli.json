@@ -1,0 +1,13 @@
+{
+  "sandbox": {
+    "mode": "enabled",
+    "networkAccess": "user_config_with_defaults",
+    "networkAllowlist": [
+      "127.0.0.1",
+      "localhost",
+      "raw.githubusercontent.com",
+      "github.com",
+      "api.github.com"
+    ]
+  }
+}
