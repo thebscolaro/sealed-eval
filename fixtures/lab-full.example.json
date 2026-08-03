@@ -1,0 +1,138 @@
+{
+  "task_card": {
+    "id": "lab-full",
+    "title": "QA lab multi-mode",
+    "summary": "HTTP contracts, golden, invariants, UI, json_probe, and sqlite — not health-only",
+    "public_acceptance": [
+      "GET /api/health returns ok",
+      "OpenAPI schema is reachable",
+      "Wrong PIN is rejected",
+      "Valid PIN issues a token",
+      "Items list requires auth",
+      "Login UI shows PIN prompt",
+      "Health never leaks traceback",
+      "Local probe and sqlite checks pass"
+    ]
+  },
+  "cases": [
+    {
+      "id": "health-contract",
+      "check": "contract",
+      "bucket": "http",
+      "request": { "method": "GET", "path": "/api/health" },
+      "expect": { "status": 200, "json_contains": { "status": "ok" } },
+      "visible": true
+    },
+    {
+      "id": "health-golden",
+      "check": "holdout_golden",
+      "bucket": "golden",
+      "request": { "method": "GET", "path": "/api/health" },
+      "expect": { "status": 200, "json_equals": { "status": "ok" } },
+      "visible": false
+    },
+    {
+      "id": "health-invariant",
+      "check": "invariant",
+      "bucket": "invariant",
+      "request": { "method": "GET", "path": "/api/health" },
+      "expect": {
+        "status": 200,
+        "never_contains": ["traceback", "DEMO_PIN", "secret"]
+      },
+      "visible": false
+    },
+    {
+      "id": "openapi",
+      "check": "contract",
+      "bucket": "http",
+      "request": { "method": "GET", "path": "/api/openapi.json" },
+      "expect": { "status": 200 },
+      "visible": true
+    },
+    {
+      "id": "login-wrong-pin",
+      "check": "contract",
+      "bucket": "auth",
+      "request": {
+        "method": "POST",
+        "path": "/api/login",
+        "json": { "pin": "111111" }
+      },
+      "expect": { "status": 401 },
+      "visible": false
+    },
+    {
+      "id": "login-ok",
+      "check": "holdout_golden",
+      "bucket": "auth",
+      "request": {
+        "method": "POST",
+        "path": "/api/login",
+        "json": { "pin": "000000" }
+      },
+      "expect": {
+        "status": 200,
+        "regex": "\"token\"\\s*:\\s*\"[^\"]{32,}\""
+      },
+      "visible": false
+    },
+    {
+      "id": "items-unauth",
+      "check": "contract",
+      "bucket": "auth",
+      "request": { "method": "GET", "path": "/api/items" },
+      "expect": { "status": 401 },
+      "visible": false
+    },
+    {
+      "id": "login-ui",
+      "check": "ui",
+      "bucket": "ui",
+      "request": { "path": "/" },
+      "expect": {
+        "text": "Enter the 6-digit demo PIN to continue."
+      },
+      "visible": true
+    },
+    {
+      "id": "login-ui-label",
+      "check": "ui",
+      "bucket": "ui",
+      "request": { "path": "/" },
+      "expect": { "text": "PIN", "selector": "label" },
+      "visible": false
+    },
+    {
+      "id": "probe-ok",
+      "check": "json_probe",
+      "bucket": "probe",
+      "request": {
+        "argv": [
+          "python3",
+          "-c",
+          "import json; print(json.dumps({'lab': 'qa-automation', 'ok': True}))"
+        ]
+      },
+      "expect": {
+        "exit_code": 0,
+        "jsonpath_equals": { "ok": true, "lab": "qa-automation" }
+      },
+      "visible": false
+    },
+    {
+      "id": "sqlite-row",
+      "check": "db",
+      "bucket": "db",
+      "request": {
+        "sql": "SELECT id, name FROM items WHERE id = 1",
+        "dsn_env": "DATABASE_URL"
+      },
+      "expect": {
+        "row_count": 1,
+        "row0_contains": { "id": 1, "name": "sealed-eval" }
+      },
+      "visible": false
+    }
+  ]
+}
