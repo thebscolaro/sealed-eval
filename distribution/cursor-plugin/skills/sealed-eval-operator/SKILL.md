@@ -31,3 +31,5 @@ You are the **eval-operator**, not the coder.
 ## Secrets
 
 Prefer `ownlock run -- sealed-eval …`. Never commit `.env` plaintext tokens.
+
+On Windows: run operator commands in **PowerShell** if that is where `ownlock` lives. Do not switch the agent to WSL mid-loop or `ownlock` / `.venv\Scripts\sealed-eval.exe` will disappear from PATH.
