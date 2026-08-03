@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import subprocess
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -132,12 +133,15 @@ def run_holdout_golden(case: Case, base_url: str, ctx: dict[str, Any]) -> tuple[
         if isinstance(body, dict):
             _capture_ids(body, ctx, expect)
         return _check_predicates(body, text, expect)
-    # file golden under request.file (relative path resolved by caller via request)
+    # file golden: relative path only, no .. (caller supplies sealed corpus paths)
     path = case.request.get("file")
     if not path:
         return False, "no_target"
+    p = Path(path)
+    if p.is_absolute() or ".." in p.parts:
+        return False, "file_path_denied"
     try:
-        raw = open(path, encoding="utf-8").read()  # noqa: PTH123 — sealed path from case
+        raw = p.read_text(encoding="utf-8")
     except OSError:
         return False, "file_missing"
     try:
@@ -148,23 +152,21 @@ def run_holdout_golden(case: Case, base_url: str, ctx: dict[str, Any]) -> tuple[
 
 
 def run_invariant(case: Case, base_url: str, ctx: dict[str, Any]) -> tuple[bool, str]:
-    """Property checks on an HTTP response (or last body in ctx)."""
-    if case.request.get("path"):
-        r, err = _http(case, base_url, ctx)
-        if r is None:
-            return False, err
-        if "status" in case.expect and r.status_code != case.expect["status"]:
-            return False, f"status:{r.status_code}"
-        try:
-            body = r.json()
-        except Exception:
-            body = None
-        text = r.text
-        if isinstance(body, dict):
-            _capture_ids(body, ctx, case.expect)
-        return _check_predicates(body, text, case.expect)
-    body = ctx.get("last_body")
-    text = ctx.get("last_text", json.dumps(body) if body is not None else "")
+    """Property checks on an HTTP response."""
+    if not case.request.get("path"):
+        return False, "no_path"
+    r, err = _http(case, base_url, ctx)
+    if r is None:
+        return False, err
+    if "status" in case.expect and r.status_code != case.expect["status"]:
+        return False, f"status:{r.status_code}"
+    try:
+        body = r.json()
+    except Exception:
+        body = None
+    text = r.text
+    if isinstance(body, dict):
+        _capture_ids(body, ctx, case.expect)
     return _check_predicates(body, text, case.expect)
 
 

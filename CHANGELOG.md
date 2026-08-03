@@ -1,3 +1,9 @@
+## [0.3.3] — 2026-08-03
+
+- Harden suite_id / draft auth / fixtures-only import; seal compare_digest
+- Podman-or-Docker via `scripts/container-compose.sh`; compose bind 127.0.0.1
+- Drop unused deps/schemas; quieter survey; sandbox dogfood via `agent --sandbox`
+
 ## [0.3.2] — 2026-08-03
 
 - Drop Contributor Covenant `CODE_OF_CONDUCT.md`

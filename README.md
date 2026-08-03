@@ -19,6 +19,7 @@ Editable sources: [architecture.drawio](docs/architecture.drawio), [operator-loo
 3. **Coder sees** public task + aggregate scorecard — never sealed expects.
 4. **Secrets:** prefer `ownlock run -- sealed-eval …` and `./scripts/bootstrap.sh`.
 5. **Sibling control plane:** `./scripts/bootstrap-sibling.sh /path/to/subject` → `{name}-sealed-eval`.
+6. **Containers:** `./scripts/container-compose.sh` prefers Podman, falls back to Docker (same `Dockerfile` / compose names).
 
 ## Check modes
 
@@ -27,7 +28,7 @@ Editable sources: [architecture.drawio](docs/architecture.drawio), [operator-loo
 | `contract` | HTTP request + assert response | Works |
 | `holdout_golden` | Sealed expected body / sha256 | Works |
 | `invariant` | regex / never_contains / dotted jsonpath | Works |
-| `ui` | Playwright text/selector/screenshot hash | Works (`[ui]`) |
+| `ui` | Playwright text/selector | Works (`[ui]`) |
 | `json_probe` | Sealed argv → JSON stdout asserts | Works |
 | `db` | Read-only SQL via `DATABASE_URL` | Works (sqlite; psycopg optional) |
 | `differential` / `cli` | Specced | Later |
@@ -52,7 +53,7 @@ Cursor project skills: `.cursor/skills/` (symlinked from `distribution/cursor-pl
 ## Docs
 
 - [Runbook](docs/RUNBOOK.md) · [SPEC.md](SPEC.md) · [AGENTS.md](AGENTS.md) · [CHANGELOG.md](CHANGELOG.md) · [github-security](docs/github-security.md)
-- Dogfoods: [SPA](docs/dogfood-spa.md) · [fullstack](docs/dogfood-fullstack.md) · [plugin + sandbox](docs/dogfood-plugin-sandbox.md)
+- Dogfoods: [SPA](docs/dogfood-spa.md) · [fullstack](docs/dogfood-fullstack.md) · [mid-size](docs/dogfood-midsize.md) · [plugin + sandbox](docs/dogfood-plugin-sandbox.md)
 - Local Cursor plugin: `./scripts/install-cursor-plugin-local.sh` → `~/.cursor/plugins/local/sealed-eval`
 
 MIT. Keep seal tokens out of issues and CI logs.

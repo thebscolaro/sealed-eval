@@ -1,4 +1,5 @@
 FROM python:3.12-slim
+# Works with `podman build` / `podman compose` using the same Dockerfile name.
 WORKDIR /app
 COPY pyproject.toml README.md SPEC.md ./
 COPY src ./src

@@ -57,14 +57,15 @@ def test_survey_subject_smoke(tmp_path):
         "# App\n\n- Fancy feature bullet\n\n## Acceptance\n- Page shows \"Hi\"\n",
         encoding="utf-8",
     )
-    (tmp_path / "package.json").write_text('{"scripts":{"dev":"vite"}}', encoding="utf-8")
+    (tmp_path / "package.json").write_text('{"scripts":{"build":"vite build","dev":"vite"}}', encoding="utf-8")
     text = survey_subject(tmp_path)
     assert "Survey candidates" in text
     assert "Novel acceptance" in text
     assert "Low-confidence heuristics" in text
     assert "Hi" in text or "shows" in text.lower()
     assert "Fancy feature bullet" not in text
-    assert 'npm script "dev"' in text
+    assert 'npm script "build"' in text
+    assert 'npm script "dev"' not in text
 
 
 def test_survey_skips_dep_bump_titles():
@@ -75,17 +76,26 @@ def test_survey_skips_dep_bump_titles():
     assert not _is_gh_noise("Add PIN login acceptance")
 
 
-def test_invariant_never_contains():
+def test_suite_id_rejects_traversal(tmp_path):
+    from sealed_eval.store import SealedStore
+
+    store = SealedStore(tmp_path)
+    try:
+        store._suite_dir("../escape")
+        raise AssertionError("expected ValueError")
+    except ValueError:
+        pass
+
+
+def test_invariant_requires_path():
     case = Case(
         id="i",
         check=CheckMode.invariant,
         request={},
         expect={"never_contains": ["boom"]},
     )
-    ok, _ = run_invariant(case, "http://x", {"last_body": {"ok": True}, "last_text": '{"ok":true}'})
-    assert ok
-    bad, reason = run_invariant(case, "http://x", {"last_body": {}, "last_text": "boom"})
-    assert not bad and "never_contains" in reason
+    ok, reason = run_invariant(case, "http://x", {})
+    assert not ok and reason == "no_path"
 
 
 def test_json_probe_echo():

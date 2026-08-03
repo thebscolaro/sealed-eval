@@ -2,19 +2,27 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import secrets
 from pathlib import Path
 
 from sealed_eval.models import Case, Scorecard, SuiteStatus, TaskCard
 
+_SUITE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+
 
 class SealedStore:
     def __init__(self, root: Path):
-        self.root = Path(root)
+        self.root = Path(root).resolve()
         self.root.mkdir(parents=True, exist_ok=True)
 
     def _suite_dir(self, suite_id: str) -> Path:
-        return self.root / suite_id
+        if not _SUITE_ID.match(suite_id):
+            raise ValueError(f"invalid suite_id: {suite_id!r}")
+        d = (self.root / suite_id).resolve()
+        if not d.is_relative_to(self.root):
+            raise ValueError(f"invalid suite_id: {suite_id!r}")
+        return d
 
     def write_draft(self, card: TaskCard, cases: list[Case]) -> None:
         d = self._suite_dir(card.id)
@@ -44,7 +52,7 @@ class SealedStore:
         draft = (d / "cases.sealed.json").read_bytes()
         digest = hashlib.sha256(draft + token.encode()).hexdigest()
         got = f"seal_{digest[:24]}"
-        if got != expected:
+        if not secrets.compare_digest(got, expected):
             raise PermissionError("seal token mismatch")
 
     def load_task(self, suite_id: str) -> TaskCard:
@@ -83,14 +91,18 @@ class SealedStore:
     def save_scorecard(self, suite_id: str, score: Scorecard) -> None:
         d = self._suite_dir(suite_id)
         d.mkdir(parents=True, exist_ok=True)
-        (d / "scorecard.json").write_text(score.model_dump_json(indent=2), encoding="utf-8")
-        # coder-safe copy: aggregates only (same shape today; no payloads)
-        (d / "scorecard.public.json").write_text(score.model_dump_json(indent=2), encoding="utf-8")
+        text = score.model_dump_json(indent=2)
+        (d / "scorecard.json").write_text(text, encoding="utf-8")
 
     def load_public_scorecard(self, suite_id: str) -> dict:
-        path = self._suite_dir(suite_id) / "scorecard.public.json"
+        d = self._suite_dir(suite_id)
+        path = d / "scorecard.json"
         if not path.exists():
-            raise FileNotFoundError(f"no scorecard for {suite_id}")
+            legacy = d / "scorecard.public.json"
+            if legacy.exists():
+                path = legacy
+            else:
+                raise FileNotFoundError(f"no scorecard for {suite_id}")
         return json.loads(path.read_text(encoding="utf-8"))
 
     @staticmethod

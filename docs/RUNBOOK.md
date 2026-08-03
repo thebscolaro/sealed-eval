@@ -22,9 +22,11 @@ Survey prioritizes AC-shaped files (`ACCEPT*`, `*criteria*`, `docs/defects/**`),
 | --- | --- |
 | `bootstrap-sibling.sh` | Private **control plane** next to a subject (sealed store + ownlock). Correct isolation. |
 | Cursor plugin skills (`distribution/cursor-plugin/`) | Tell the agent the operator/coder/setup loops. Sibling copy includes them under `.cursor/skills/`. |
-| Cursor sandbox | Separate runtime limits. Sibling dogfood does **not** prove sandbox or marketplace plugin install. |
+| Cursor sandbox | Use `agent --sandbox enabled` (project cli.json sandbox key not in schema). |
 
-Marketplace plugin provenance is still later — see `docs/SKILL_FOLLOWUPS.md`.
+Marketplace listing still needs Cursor review — see `docs/SKILL_FOLLOWUPS.md`. Local plugin: `./scripts/install-cursor-plugin-local.sh`.
+
+Containers: `./scripts/container-compose.sh up` (Podman preferred, else Docker). Compose publishes to `127.0.0.1` only.
 
 ## Cold install
 

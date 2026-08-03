@@ -26,7 +26,8 @@ If a seal token leaks, rotate it: re-seal the corpus with a new token and discar
 
 | Version | Supported |
 | --- | --- |
-| 0.2.x | Yes |
+| 0.3.x | Yes |
+| 0.2.x | Best-effort |
 | 0.1.x | Best-effort |
 
 ## Security model (short)

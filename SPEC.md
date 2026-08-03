@@ -28,7 +28,7 @@ Grade coding-agent work against expected behavior that agents **cannot edit**.
 6. `grade` — run adapters; persist scorecard
 7. `GET /v1/scorecard/{id}` — coder-safe aggregates
 8. `gate` — pass / fail / retry
-9. `capabilities` — gh, ownlock, playwright, intent-layer, ctx7, docker
+9. `capabilities` — gh, ownlock, playwright, intent-layer, ctx7, containers (podman|docker)
 
 Coder profile: public task, submit artifact ref, read aggregate scorecard.
 

@@ -13,13 +13,9 @@ Skills: `sealed-eval-operator`, `sealed-eval-coder`, `sealed-eval-setup`
 
 This is the documented **pre-marketplace** path from Cursor plugin docs. Official marketplace listing still needs a human submit at https://cursor.com/marketplace/publish (repo: `thebscolaro/sealed-eval`, plugin root `distribution/cursor-plugin/`).
 
-## Sandbox (project CLI config)
+## Sandbox (CLI flag)
 
-[`.cursor/cli.json`](../.cursor/cli.json) enables Cursor CLI sandbox for this repo with localhost + GitHub allowlisted. Project overrides apply to Cursor CLI agent sessions in this tree; they do not rewrite `~/.cursor/cli-config.json`.
-
-Grade itself is still the harness CLI (`sealed-eval grade …`). Sandbox wraps **agent** shell/network in CLI sessions that call that harness — not a second grader.
-
-Project config is committed. Headless proof command (needs `agent login` or `CURSOR_API_KEY`):
+Project `.cursor/cli.json` sandbox keys are **not** accepted by current Cursor schema — use the agent flag:
 
 ```bash
 cd ~/code/qa-automation-lab-se-sealed-eval
@@ -27,7 +23,7 @@ agent --sandbox enabled --workspace "$PWD" -p --force \
   'source .venv/bin/activate && sealed-eval scorecard lab'
 ```
 
-This session could not complete that headless run (CLI auth missing). Local plugin install **did** complete; sandbox is enabled via project `.cursor/cli.json` + `--sandbox enabled` flag for when CLI auth is available.
+**Proven 2026-08-03** after `agent login`: scorecard `gate: pass` (http+ui) under `--sandbox enabled`.
 
 ## Relation to fullstack dogfood
 

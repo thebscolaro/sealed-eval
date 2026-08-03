@@ -190,12 +190,16 @@ def propose_from_markdown(suite_id: str, title: str, body: str) -> tuple[TaskCar
         if expect is None:
             skipped.append(bullet)
             continue
+        ui_path = "/"
+        pm = re.search(r"(?i)\bat\s+(/\S+)", bullet)
+        if pm:
+            ui_path = pm.group(1).rstrip(".,)")
         cases.append(
             Case(
                 id=cid,
                 check=CheckMode.ui,
                 bucket="ui",
-                request={"path": "/"},
+                request={"path": ui_path},
                 expect=expect,
                 visible=not cases,
             )
@@ -214,7 +218,11 @@ def propose_from_markdown(suite_id: str, title: str, body: str) -> tuple[TaskCar
 
 
 def load_fixture(name: str) -> tuple[TaskCard, list[Case]]:
-    path = _FIXTURES / f"{name}.json"
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}", name or ""):
+        raise ValueError(f"invalid fixture name: {name!r}")
+    path = (_FIXTURES / f"{name}.json").resolve()
+    if not path.is_relative_to(_FIXTURES.resolve()):
+        raise ValueError(f"fixture escapes fixtures/: {name!r}")
     if not path.exists():
         raise FileNotFoundError(f"fixture not found: {path}")
     return import_cases_json(path)
