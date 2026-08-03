@@ -23,12 +23,15 @@
 - Created via `./scripts/bootstrap-sibling.sh`
 
 ## HITL + grade that ran
-1. Survey → Accept OK:
-   - `GET /api/health returns 200 with status ok`
-   - `Login page shows "Enter the 6-digit demo PIN to continue."`
-2. `propose` / `show-draft` / `seal` / `publish` (suite `lab`)
-3. SUT: `demo-app` uvicorn `:5050` + `web` Vite `:5173` (proxies `/api`)
-4. `grade lab http://127.0.0.1:5173` → **gate pass**, http 1/1 + ui 1/1
+1. Early Accept (suite `lab`): health + login UI string → gate pass
+2. Expanded suite **`lab-full`** (11 cases, all working modes) → **gate pass** 11/11:
+   - `contract`: health, openapi, wrong PIN → 401, items without auth → 401
+   - `holdout_golden`: health body; login `000000` issues a `token`
+   - `invariant`: health never contains traceback / DEMO_PIN
+   - `ui`: PIN prompt + label
+   - `json_probe` + `db` (sqlite): local side checks
+3. SUT: `demo-app` `:5050` + `web` `:5173` (proxies `/api`); `DATABASE_URL` set for db case
+4. Fixture: sibling `fixtures/lab-full.json`
 
 ## What this proves
 - Sibling control plane grades a third-party public app with **HTTP + UI** buckets
